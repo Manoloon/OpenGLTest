@@ -3,22 +3,35 @@
 #include <GLFW\glfw3.h>
 #include <string.h>
 #include <stdio.h>
+#include <cmath>
+#include "GLM/glm.hpp"
+#include "GLM/gtc/matrix_transform.hpp"
+#include "GLM/gtc/type_ptr.hpp"
+#include "GLM/mat4x4.hpp"
 
 const GLint WinWidth = 640;
 const GLint WinHeight = 480;
-
+const float ToRad = 3.14159265f / 360.f;
 GLuint VAO,VBO,shader;
+GLuint uniformModel;
+GLuint uniformColor;
 
+bool dir = true;
+float objOffset =0;
+float objMaxOffset = 0.6f;
+float objIncrement = 0.005f;
+float curAngle=0;
 //  vertex shader
 // here we define the shader (this should be doing externally)
-static const char* vShader = "                                  \n\
-#version 330                                                    \n\
-                                                                \n\
-layout (location = 0) in vec3 pos;                              \n\
-                                                                \n\
-void main()                                                     \n\
-{                                                               \n\
-    gl_Position = vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);   \n\
+static const char* vShader = "                                          \n\
+#version 330                                                            \n\
+                                                                        \n\
+layout (location = 0) in vec3 pos;                                      \n\
+                                                                        \n\
+uniform mat4 model;                                                    \n\
+void main()                                                             \n\
+{                                                                       \n\
+    gl_Position = model * vec4(pos.x,pos.y, pos.z, 1.0);   \n\
 }";
 
 //  Fragment shader
@@ -27,10 +40,10 @@ static const char* fShader = "                              \n\
 #version 330                                                \n\
                                                             \n\
 out vec4 colour;                                            \n\
-                                                            \n\
+uniform float color;                                         \n\
 void main()                                                 \n\
 {                                                           \n\
-    colour = vec4(0.2,  1.0,    0.01,    1.0);              \n\
+    colour = vec4(color,  0.5,    color,    1.0);              \n\
 }";
 
 void CreateTriangle(){
@@ -122,6 +135,9 @@ void compileShaders(){
         printf("Error Validating program; '%s'\n",eLog);
         return;
     }
+
+    uniformModel = glGetUniformLocation(shader,"model");
+    uniformColor = glGetUniformLocation(shader,"color");
 }
 
 int main()
@@ -172,12 +188,31 @@ int main()
     {
         // inputs events
         glfwPollEvents();
+
+        // updating movement triangle
+        (dir) ? objOffset += objIncrement : objOffset -= objIncrement;
+        if (abs(objOffset) >= objMaxOffset) {
+            dir = !dir;
+        }
+        curAngle += 0.5f;
+        float objScale = objOffset * 2;
+        if(curAngle >=360.f){
+            curAngle -=360.f;
+        }
         // clear window (from 0 to 1 RGBA)
         glClearColor(0.3f,0.5f,1.0f,1.f);
         glClear(GL_COLOR_BUFFER_BIT);
-
+        
         // use this shader
         glUseProgram(shader);
+        glm::mat4 model(1.0f);
+        // bind the uniform value with the value
+        model = glm::translate(model,glm::vec3(objOffset,objOffset,0.0f));
+        model = glm::rotate(model,curAngle * ToRad,glm::vec3(0.0f,0.0f,1.0f));
+        model = glm::scale(model,glm::vec3(objScale,objScale,1.0f));
+        
+        glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+        glUniform1f(uniformColor,objOffset);
         // bind it with this VAO
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES,0,3);
@@ -188,7 +223,5 @@ int main()
         // 2 buffers at this moment.
         glfwSwapBuffers(mainWindow);
     }
-
-    //glfwTerminate();
     return 0;
 }
