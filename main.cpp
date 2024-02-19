@@ -14,6 +14,7 @@ const GLint WinHeight = 480;
 const float ToRad = 3.14159265f / 360.f;
 GLuint VAO,VBO,IBO,shader;
 GLuint uniformModel;
+GLuint uniformProjection;
 
 bool dir = true;
 float objOffset =0;
@@ -24,14 +25,15 @@ float curAngle=0;
 // here we define the shader (this should be doing externally)
 static const char* vShader = "                                          \n\
 #version 330                                                            \n\
-out vec4 vCol;                                                           \n\
+out vec4 vCol;                                                          \n\
 layout (location = 0) in vec3 pos;                                      \n\
                                                                         \n\
-uniform mat4 model;                                                    \n\
+uniform mat4 model;                                                     \n\
+uniform mat4 projection;                                                \n\
 void main()                                                             \n\
 {                                                                       \n\
-    gl_Position = model * vec4(pos, 1.0);   \n\
-    vCol = vec4(clamp(pos,0.0f,1.0f),1.0);                                               \n\
+    gl_Position = projection * model * vec4(pos, 1.0);                  \n\
+    vCol = vec4(clamp(pos,0.0f,1.0f),1.0);                              \n\
 }";
 
 //  Fragment shader
@@ -149,6 +151,7 @@ void compileShaders(){
     }
 
     uniformModel = glGetUniformLocation(shader,"model");
+    uniformProjection = glGetUniformLocation(shader,"projection");
 }
 
 int main()
@@ -174,8 +177,9 @@ int main()
     // get buffer size information (is the part of the window to draw)
     int bufferWidth;
     int bufferHeight;
+    GLfloat FOV = 45.0f;
     glfwGetFramebufferSize(mainWindow,&bufferWidth,&bufferHeight);
-
+    GLfloat aspectRatio = GLfloat(bufferWidth)/GLfloat(bufferHeight);
     // set context for glew to use (this allow to switch between windows)
     glfwMakeContextCurrent(mainWindow);
     
@@ -195,6 +199,7 @@ int main()
     // DRAWING
     CreateTriangle();
     compileShaders();
+    glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,100.0f);
     ///
 
     while (!glfwWindowShouldClose(mainWindow))
@@ -220,12 +225,14 @@ int main()
         // use this shader
         glUseProgram(shader);
         glm::mat4 model(1.0f);
+    
         // bind the uniform value with the value
-        model = glm::translate(model,glm::vec3(objOffset,objOffset,0.0f));
+        model = glm::translate(model,glm::vec3(objOffset,objOffset,-2.0f));
         model = glm::rotate(model,curAngle * ToRad,glm::vec3(0.0f,1.0f,0.0f));
         model = glm::scale(model,glm::vec3(objScale,objScale,objScale));
         
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+        glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projection));
         // bind it with this VAO
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
