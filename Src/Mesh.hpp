@@ -10,9 +10,9 @@ class Mesh{
     public:
         Mesh(){
             VAO =0;
-            VBO=0;
-            IBO=0;
-            indexCount=0;
+            VBO =0;
+            IBO =0;
+            indexCount =0;
         }
 
         void CreateMesh(GLfloat* vertices,unsigned int* indices, unsigned int numVertices, unsigned int numIndices){
@@ -22,12 +22,12 @@ class Mesh{
 
             glGenBuffers(1,&IBO);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices[0] * numIndices),indices,GL_STATIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices[0]) * numIndices,indices,GL_STATIC_DRAW);
 
             glGenBuffers(1,&VBO);
             glBindBuffer(GL_ARRAY_BUFFER,VBO);
             // static is because we are not moving the vertices on runtime
-            glBufferData(GL_ARRAY_BUFFER,sizeof(vertices[0] * numVertices),vertices,GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER,sizeof(vertices[0]) * numVertices,vertices,GL_STATIC_DRAW);
             
                 /*
                     3 are the number of data for the vertice : XYZ, 

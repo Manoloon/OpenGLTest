@@ -4,12 +4,12 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
-
+#include <ios>
 #include <GL/glew.h>
 
 class Shader{
 
-    GLuint shaderID,uniformProjection,uniformModel;
+    GLuint shaderID,uniformProjection,uniformModel,uniformView;
 
     void CompileShader(const char* vertexCode, const char* fragmentCode){
             shaderID = glCreateProgram();
@@ -46,6 +46,7 @@ class Shader{
         return;
     }
     uniformProjection = glGetUniformLocation(shaderID,"projection");
+    uniformView = glGetUniformLocation(shaderID,"view");
     uniformModel = glGetUniformLocation(shaderID,"model");
     }
 
@@ -81,6 +82,7 @@ class Shader{
     Shader(){
         shaderID = 0;
         uniformModel = 0;
+        uniformView = 0;
         uniformProjection = 0;
     };
 
@@ -103,7 +105,7 @@ class Shader{
 
     std::string ReadFile(const char* fileLocation){
         std::string content;
-        std::ifstream fileStream(fileLocation,std::ios:in);
+        std::ifstream fileStream(fileLocation,std::ios::in);
         if(!fileStream){
             printf("Failed To read %s! file doesnt exists.",fileLocation);
         }
@@ -118,6 +120,10 @@ class Shader{
 
     GLuint GetProjectionLocation() const {
         return uniformProjection;
+    }
+
+    GLuint GetViewLocation() const{
+        return uniformView;
     }
 
     GLuint GetModelLocation() const {
@@ -135,5 +141,6 @@ class Shader{
             }
         uniformModel = 0;
         uniformProjection = 0;
+        uniformView = 0;
     }
 };
