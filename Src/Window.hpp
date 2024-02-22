@@ -8,14 +8,14 @@
 class Window{
 
     GLFWwindow* mainWindow; 
-    GLint winWidth = 640;
-    GLint winHeight = 480;
+    GLint winWidth = 800;
+    GLint winHeight = 600;
     GLint bufferWidth;
     GLint bufferHeight;
 
     // mouse input
-    GLfloat xChange;
-    GLfloat yChange;
+    GLfloat xChange = 0.0f;
+    GLfloat yChange = 0.0f;
     GLfloat xLast;
     GLfloat yLast;
     bool IsMouseFirstMove;
@@ -23,8 +23,10 @@ class Window{
     void CreateCallbacks(){
         glfwSetCursorPosCallback(mainWindow,HandleMouse);
     }
+
     static void HandleMouse(GLFWwindow* win,double xPos,double yPos){
         Window* TheWin = static_cast<Window*>(glfwGetWindowUserPointer(win));
+        
         if(TheWin->IsMouseFirstMove){
             TheWin->xLast = xPos;
             TheWin->yLast = yPos;

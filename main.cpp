@@ -60,7 +60,7 @@ void CreateShaders(){
 
 int main()
 {  
-    MainWindow = Window(640,480);
+    MainWindow = Window();
     MainWindow.Initialise();
     Camera camera;
     GLfloat FOV = 45.0f;
@@ -72,7 +72,7 @@ int main()
     GLuint uniformModel = 0;
     GLuint uniformView = 0;
     GLuint uniformProjection = 0;
-    glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,100.0f);
+    glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,1000.0f);
     ///
     GLfloat lastFrameTime = 0.0f;
     GLfloat deltaTime = 0.0f;
@@ -87,20 +87,7 @@ int main()
         // inputs events
         glfwPollEvents();
         camera.MouseControl(MainWindow.GetXChange(),MainWindow.GetYChange());
-        camera.KeyControl(deltaTime);
-        /*
-        if(glfwGetKey(MainWindow.GetWindow(),GLFW_KEY_W) == GLFW_PRESS){
-                cameraPosition += -cameraSpeed * glm::vec3(1.0f,0.0f,0.0f);
-        }
-        if(glfwGetKey(MainWindow.GetWindow(),GLFW_KEY_A) == GLFW_PRESS){
-                cameraPosition += -cameraSpeed * glm::vec3(0.0f,1.0f,0.0f);
-        }
-        if(glfwGetKey(MainWindow.GetWindow(),GLFW_KEY_S) == GLFW_PRESS){
-                cameraPosition += cameraSpeed * glm::vec3(1.0f,0.0f,0.0f);
-        }
-        if(glfwGetKey(MainWindow.GetWindow(),GLFW_KEY_D) == GLFW_PRESS){
-                cameraPosition += cameraSpeed * glm::vec3(0.0f,1.0f,0.0f);
-        }*/
+        camera.KeyControl(MainWindow.GetWindow(),deltaTime);
         // clear window (from 0 to 1 RGBA)
         glClearColor(0.3f,0.5f,1.0f,1.f);
         // we are now clearing the depth buffer too.
@@ -113,17 +100,16 @@ int main()
 
         // bind the uniform value with the value
         glm::mat4 model(1.0f);
-        model = glm::translate(model,glm::vec3(0.0f,0.0f,-3.0f));
-        model = glm::rotate(model, 45.0f * ToRad, glm::vec3(0.0f,1.0f,0.0f));
+        model = glm::translate(model,glm::vec3(2.0f,0.0f,0.1f));
+       // model = glm::rotate(model, 45.0f * ToRad, glm::vec3(0.0f,1.0f,0.0f));
         model = glm::scale(model,glm::vec3(0.4f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-         glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projection));
+        glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projection));
         meshList[0]->RenderMesh();
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model,glm::vec3(0.3f,0.5f,-2.0f));
-        model = glm::rotate(model, 45.0f * ToRad, glm::vec3(0.0f,1.0f,0.0f));
-        model = glm::scale(model,glm::vec3(0.1f));
+        model = glm::translate(model,glm::vec3(0.0f,0.0f,3.0f));
+        model = glm::scale(model,glm::vec3(1.0f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
 
         glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(camera.CalculateViewMatrix()));
