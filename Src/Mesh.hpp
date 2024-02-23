@@ -17,6 +17,7 @@ class Mesh{
 
         void CreateMesh(GLfloat* vertices,unsigned int* indices, unsigned int numVertices, unsigned int numIndices){
             indexCount = numIndices;
+            unsigned long long VertSize = sizeof(vertices[0]);
             glGenVertexArrays(1,&VAO);
             glBindVertexArray(VAO);
 
@@ -27,15 +28,18 @@ class Mesh{
             glGenBuffers(1,&VBO);
             glBindBuffer(GL_ARRAY_BUFFER,VBO);
             // static is because we are not moving the vertices on runtime
-            glBufferData(GL_ARRAY_BUFFER,sizeof(vertices[0]) * numVertices,vertices,GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER,VertSize * numVertices,vertices,GL_STATIC_DRAW);
             
                 /*
                     3 are the number of data for the vertice : XYZ, 
                     stride : you can have the color of each vertice on the same array ,if so , stride would be 3 , because thats the amount 
                     of data that you want to jump from , -1.f,-1.f,0.f, to 1.f,-1.f,0.f.
                 */
-            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
+            glVertexAttribPointer(0,VertSize * 5,GL_FLOAT,GL_FALSE,0,0);
             glEnableVertexAttribArray(0);
+
+            glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,VertSize * 5,(void*)(VertSize * 3));
+            glEnableVertexAttribArray(1);
 
             glBindBuffer(GL_ARRAY_BUFFER,0);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

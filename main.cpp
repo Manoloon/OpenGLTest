@@ -1,4 +1,6 @@
 /* OpenGL C++ 20 Glew and Glfw Template */
+//#define STB_IMAGE_IMPLEMENTATION
+
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 #include <string.h>
@@ -6,6 +8,8 @@
 #include <cmath>
 #include <vector>
 #include <memory>
+
+#include "Src/stb_image.h"
 #include "GLM/glm.hpp"
 #include "GLM/gtc/matrix_transform.hpp"
 #include "GLM/gtc/type_ptr.hpp"
@@ -15,6 +19,7 @@
 #include "Src/Mesh.hpp"
 #include "Src/Shader.hpp"
 #include "Src/Camera.hpp"
+#include "Src/Texture.h"
 
 const float ToRad = 3.14159265f / 360.f;
 
@@ -37,18 +42,19 @@ void CreateTObjects(){
     };
 
     GLfloat vertices[]{
-        -1.f,-1.f,0.f,
-        0.f,-1.f,1.f,
-        1.f,-1.f,0.f,
-        0.f,1.f,0.f
+        //x,     y,    z,      U,       V
+        -1.f,   -1.f,   0.f,    0.0f,   0.0f,
+        0.f,    -1.f,   1.f,    0.5f,   0.0f,
+        1.f,    -1.f,   0.f,    1.0f,   0.0f,
+        0.f,    1.f,    0.f,    0.5f,   1.0f
     };
 
     std::shared_ptr<Mesh> obj1 = std::make_shared<Mesh>();
-    obj1->CreateMesh(vertices,indices,12,12);
+    obj1->CreateMesh(vertices,indices,20,12);
     meshList.emplace_back(obj1);
 
     std::shared_ptr<Mesh> obj2 = std::make_shared<Mesh>();
-    obj2->CreateMesh(vertices,indices,12,12);
+    obj2->CreateMesh(vertices,indices,20,12);
     meshList.emplace_back(obj2);
 }
 
@@ -63,6 +69,10 @@ int main()
     MainWindow = Window();
     MainWindow.Initialise();
     Camera camera;
+    Texture Text1;
+    Text1.LoadTexture("Texture/box.png");
+    Texture Text2;
+    Text2.LoadTexture("Texture/box2.png");
     GLfloat FOV = 45.0f;
     GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
      // DRAWING
