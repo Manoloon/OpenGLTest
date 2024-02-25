@@ -25,17 +25,14 @@ Window MainWindow;
 std::vector<std::shared_ptr<Mesh>> meshList;
 std::vector<std::shared_ptr<Shader>> shaderList;
 
-Texture Text1;
-Texture Text2;
-
 //  vertex shader
 static const char* vShader = "Shaders/shader.vert";
 
 //  Fragment shader
 static const char* fShader ="Shaders/shader.frag";
 
-const std::string Texture1Loc = "Texture/box.png";
-const std::string Texture2Loc = "Texture/box2.png";
+static const char* Texture1Loc = "Textures/brick.png";
+static const char* Texture2Loc = "Textures/dirt.png";
 
 void CreateTObjects(){
     unsigned int indices[]{
@@ -72,15 +69,19 @@ int main()
 {  
     MainWindow = Window();
     MainWindow.Initialise();
-    Camera camera;
-    Text1.LoadTexture(Texture1Loc);
-    Text2.LoadTexture(Texture2Loc);
 
     GLfloat FOV = 45.0f;
     GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
      // DRAWING
     CreateTObjects();
     CreateShaders();
+
+    Camera camera;
+    
+    std::unique_ptr<Texture> Text1 = std::make_unique<Texture>();
+    Text1->LoadTexture(Texture1Loc);
+    std::unique_ptr<Texture> Text2 = std::make_unique<Texture>();
+    Text2->LoadTexture(Texture2Loc);
 
     GLuint uniformModel = 0;
     GLuint uniformView = 0;

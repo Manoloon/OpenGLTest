@@ -19,7 +19,7 @@ class Camera{
     void Update(){
         forwardVector.x = glm::cos(glm::radians(yaw) * glm::cos(glm::radians(pitch)));
         forwardVector.y = glm::cos(glm::radians(pitch));
-        forwardVector.z = glm::cos(glm::radians(yaw) * glm::sin(glm::radians(pitch)));
+        forwardVector.z = glm::sin(glm::radians(yaw) * glm::cos(glm::radians(pitch)));
         forwardVector = glm::normalize(forwardVector);
 
         rightVector = glm::normalize(glm::cross(forwardVector,WorldUpVector));

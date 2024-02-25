@@ -26,13 +26,15 @@ void ClearTexture()
     bitDepth = 0;
 }
 
-void LoadTexture(const std::string& fileLocation)
+void LoadTexture(const char* fileLocation)
 {
-    unsigned char* texData = stbi_load(fileLocation.c_str(),&width,&height,&bitDepth,0);
-    if(!texData){
-        printf("FAILED TO LOAD TEXTURE DATA");
+    unsigned char* texData = stbi_load(fileLocation,&width,&height,&bitDepth,0);
+    if(stbi_failure_reason()){
+        printf(" FAILED TO LOAD TEXTURE DATA : %s \n",fileLocation);
+        std::cout << stbi_failure_reason() << std::endl;
         return;
     }
+
     glGenTextures(1,&textureID);
     glBindTexture(GL_TEXTURE_2D,textureID);
 
