@@ -19,7 +19,7 @@
 #include "Src/Camera.hpp"
 #include "Src/Texture.hpp"
 
-const float ToRad = 3.14159265f / 360.f;
+const float ToRad = 3.14159265f / 180.f;
 
 Window MainWindow;
 std::vector<std::shared_ptr<Mesh>> meshList;
@@ -34,7 +34,7 @@ static const char* fShader ="Shaders/shader.frag";
 static const char* Texture1Loc = "Textures/brick.png";
 static const char* Texture2Loc = "Textures/dirt.png";
 
-void CreateTObjects(){
+void CreateObjects(){
     unsigned int indices[]{
         0,3,1, // one side if pyramid
         1,3,2, // other side 
@@ -73,7 +73,7 @@ int main()
     GLfloat FOV = 45.0f;
     GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
      // DRAWING
-    CreateTObjects();
+    CreateObjects();
     CreateShaders();
 
     Camera camera;
@@ -114,11 +114,12 @@ int main()
 
         // bind the uniform value with the value
         glm::mat4 model(1.0f);
-        model = glm::translate(model,glm::vec3(2.0f,0.0f,0.1f));
+        model = glm::translate(model,glm::vec3(0.0f,0.0f,-1.1f));
        // model = glm::rotate(model, 45.0f * ToRad, glm::vec3(0.0f,1.0f,0.0f));
         model = glm::scale(model,glm::vec3(0.4f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
         glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projection));
+        Text1->UseTexture();
         meshList[0]->RenderMesh();
 
         model = glm::mat4(1.0f);
@@ -127,6 +128,7 @@ int main()
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
 
         glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(camera.CalculateViewMatrix()));
+        Text2->UseTexture();
         meshList[1]->RenderMesh();
        
         // and close the program

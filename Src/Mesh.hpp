@@ -2,10 +2,10 @@
 #include <GL/glew.h>
 
 class Mesh{
-    GLuint VAO;
-    GLuint VBO;
-    GLuint IBO;
-    GLsizei indexCount;
+    GLuint VAO=0;
+    GLuint VBO=0;
+    GLuint IBO=0;
+    GLsizei indexCount=0;
 
     public:
         Mesh(){
@@ -17,7 +17,9 @@ class Mesh{
 
         void CreateMesh(GLfloat* vertices,unsigned int* indices, unsigned int numVertices, unsigned int numIndices){
             indexCount = numIndices;
+
             unsigned long long VertSize = sizeof(vertices[0]);
+            
             glGenVertexArrays(1,&VAO);
             glBindVertexArray(VAO);
 
@@ -35,7 +37,7 @@ class Mesh{
                     stride : you can have the color of each vertice on the same array ,if so , stride would be 3 , because thats the amount 
                     of data that you want to jump from , -1.f,-1.f,0.f, to 1.f,-1.f,0.f.
                 */
-            glVertexAttribPointer(0,VertSize * 5,GL_FLOAT,GL_FALSE,0,0);
+            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,VertSize * 5,0);
             glEnableVertexAttribArray(0);
 
             glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,VertSize * 5,(void*)(VertSize * 3));

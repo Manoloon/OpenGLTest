@@ -2,7 +2,6 @@
 #include <GLM/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
 
-
 class Camera{
     glm::vec3 cameraPosition = {0.0f, 0.0f, 0.0f};
     glm::vec3 forwardVector = {0.0f, 0.0f, -1.0f};
@@ -13,13 +12,13 @@ class Camera{
     GLfloat yaw = -90.0f;
     GLfloat roll = 0.0f;
 
-    GLfloat moveSpeed = 5.0f;
-    GLfloat turnSpeed = 0.3f;
+    GLfloat moveSpeed = 2.0f;
+    GLfloat turnSpeed = 0.5f;
 
     void Update(){
-        forwardVector.x = glm::cos(glm::radians(yaw) * glm::cos(glm::radians(pitch)));
-        forwardVector.y = glm::cos(glm::radians(pitch));
-        forwardVector.z = glm::sin(glm::radians(yaw) * glm::cos(glm::radians(pitch)));
+        forwardVector.x = glm::cos(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
+        forwardVector.y = glm::sin(glm::radians(pitch));
+        forwardVector.z = glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
         forwardVector = glm::normalize(forwardVector);
 
         rightVector = glm::normalize(glm::cross(forwardVector,WorldUpVector));

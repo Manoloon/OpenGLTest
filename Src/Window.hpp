@@ -36,6 +36,7 @@ class Window{
         TheWin->yChange = TheWin->yLast - yPos;
         TheWin->xLast = xPos;
         TheWin->yLast = yPos;
+       // printf("yaw: %.6f, pitch: %.6f",TheWin->xChange,TheWin->yChange);
     }
 
     public:
@@ -45,6 +46,8 @@ class Window{
     
     int Initialise(){
         if (!glfwInit()){
+            printf("Error Initialising GLFW");
+		    glfwTerminate();
             return -1;
         }
 
@@ -64,16 +67,17 @@ class Window{
         }
     
         glfwGetFramebufferSize(mainWindow,&bufferWidth,&bufferHeight);
-        CreateCallbacks();
-        //disable cursor.
-        //glfwSetInputMode(mainWindow,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
-
         // set context for glew to use (this allow to switch between windows)
         glfwMakeContextCurrent(mainWindow);
         
+        CreateCallbacks();
+        //disable cursor.
+        //glfwSetInputMode(mainWindow,GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+       
         // Allow modern extension features
         glewExperimental = GL_TRUE;
         // check for glew to init
+        
         if(glewInit() != GLEW_OK){
             glfwDestroyWindow(mainWindow);
             glfwTerminate();
@@ -84,7 +88,7 @@ class Window{
         // Setup viewport size (THE VIEW)
         glViewport(0,0,bufferWidth,bufferHeight);
         glfwSetWindowUserPointer(mainWindow,this);
-            return 0;
+        return 0;
     }
 
     GLfloat GetBufferWidth() const {return bufferWidth;}
