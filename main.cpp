@@ -1,5 +1,4 @@
 /* OpenGL C++ 20 Glew and Glfw Template */
-//#define STB_IMAGE_IMPLEMENTATION
 
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
@@ -9,7 +8,6 @@
 #include <vector>
 #include <memory>
 
-#include "Src/stb_image.h"
 #include "GLM/glm.hpp"
 #include "GLM/gtc/matrix_transform.hpp"
 #include "GLM/gtc/type_ptr.hpp"
@@ -19,7 +17,7 @@
 #include "Src/Mesh.hpp"
 #include "Src/Shader.hpp"
 #include "Src/Camera.hpp"
-#include "Src/Texture.h"
+#include "Src/Texture.hpp"
 
 const float ToRad = 3.14159265f / 360.f;
 
@@ -27,11 +25,17 @@ Window MainWindow;
 std::vector<std::shared_ptr<Mesh>> meshList;
 std::vector<std::shared_ptr<Shader>> shaderList;
 
+Texture Text1;
+Texture Text2;
+
 //  vertex shader
 static const char* vShader = "Shaders/shader.vert";
 
 //  Fragment shader
 static const char* fShader ="Shaders/shader.frag";
+
+const std::string Texture1Loc = "Texture/box.png";
+const std::string Texture2Loc = "Texture/box2.png";
 
 void CreateTObjects(){
     unsigned int indices[]{
@@ -69,10 +73,9 @@ int main()
     MainWindow = Window();
     MainWindow.Initialise();
     Camera camera;
-    Texture Text1;
-    Text1.LoadTexture("Texture/box.png");
-    Texture Text2;
-    Text2.LoadTexture("Texture/box2.png");
+    Text1.LoadTexture(Texture1Loc);
+    Text2.LoadTexture(Texture2Loc);
+
     GLfloat FOV = 45.0f;
     GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
      // DRAWING

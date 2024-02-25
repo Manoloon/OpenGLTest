@@ -1,7 +1,24 @@
+#pragma once
 #define STB_IMAGE_IMPLEMENTATION
-#include "Texture.h"
 
-void Texture::ClearTexture()
+#include <GL/glew.h>
+#include "../stb_image.h"
+#include <string>
+
+class Texture{
+
+GLuint textureID;
+int width = 0;
+int height = 0;
+int bitDepth = 0;
+
+public:
+Texture()=default;
+~Texture(){
+    ClearTexture();
+}
+
+void ClearTexture()
 {
     glDeleteTextures(1,&textureID);
     height = 0;
@@ -9,14 +26,9 @@ void Texture::ClearTexture()
     bitDepth = 0;
 }
 
-Texture::~Texture()
+void LoadTexture(const std::string& fileLocation)
 {
-     ClearTexture();
-}
-
-void Texture::LoadTexture(const char* fileLocation)
-{
-    unsigned char* texData = stbi_load(fileLocation,&width,&height,&bitDepth,0);
+    unsigned char* texData = stbi_load(fileLocation.c_str(),&width,&height,&bitDepth,0);
     if(!texData){
         printf("FAILED TO LOAD TEXTURE DATA");
         return;
@@ -37,8 +49,11 @@ void Texture::LoadTexture(const char* fileLocation)
     stbi_image_free(texData);
 }
 
-void Texture::UseTexture()
+void UseTexture ()
 {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,textureID);
 }
+
+};
+
