@@ -4,12 +4,13 @@
 
 class Camera{
     glm::vec3 cameraPosition = {0.0f, 0.0f, 0.0f};
+    glm::vec3 CameraDirection = {0.0f, 0.0f, 0.0f};
     glm::vec3 forwardVector = {0.0f, 0.0f, -1.0f};
     glm::vec3 upVector = {0.0f,1.0f,0.0f};
-    glm::vec3 WorldUpVector = upVector; 
-    glm::vec3 rightVector;
-    GLfloat pitch = 0.0f;
+    glm::vec3 WorldUpVector = {0.0f,1.0f,0.0f}; 
+    glm::vec3 rightVector = {1.0f,0.0f,0.0f};;
     GLfloat yaw = -90.0f;
+    GLfloat pitch = 0.0f;
     GLfloat roll = 0.0f;
 
     GLfloat moveSpeed = 2.0f;
@@ -21,8 +22,8 @@ class Camera{
         forwardVector.z = glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
         forwardVector = glm::normalize(forwardVector);
 
-        rightVector = glm::normalize(glm::cross(forwardVector,WorldUpVector));
-        WorldUpVector = glm::normalize(glm::cross(rightVector,forwardVector));    
+        rightVector = glm::normalize(glm::cross(forwardVector,upVector));
+        WorldUpVector = glm::normalize(glm::cross(rightVector,forwardVector));
     }
 
     public:
@@ -35,16 +36,19 @@ class Camera{
         void KeyControl(GLFWwindow* win,GLfloat deltaTime){
             GLfloat velocity = moveSpeed * deltaTime;
             if(glfwGetKey(win,GLFW_KEY_W) == GLFW_PRESS){
-                cameraPosition += forwardVector * velocity;
+                cameraPosition -= forwardVector * velocity;
             }
             if(glfwGetKey(win,GLFW_KEY_A) == GLFW_PRESS){
-                    cameraPosition -= rightVector * velocity;
+                    cameraPosition += rightVector * velocity;
             }
             if(glfwGetKey(win,GLFW_KEY_S) == GLFW_PRESS){
-                    cameraPosition -= forwardVector * velocity;
+                    cameraPosition += forwardVector * velocity;
             }
             if(glfwGetKey(win,GLFW_KEY_D) == GLFW_PRESS){
-                    cameraPosition +=  rightVector * velocity;
+                    cameraPosition -=  rightVector * velocity;
+            }
+            if(glfwGetKey(win,GLFW_KEY_ESCAPE)==GLFW_PRESS){
+                glfwSetWindowShouldClose(win, GL_TRUE);
             }
         }
 
