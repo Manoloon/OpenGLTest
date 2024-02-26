@@ -15,4 +15,21 @@
 
 - using stb_image as image loader.
 
+## Lighting
+
+# Phong Lighting model
+-ambient : always present
+-diffuse : determine by direction of light
+	- diffuse factor = dotproduct v1 and v2 . cos(0 degrees) = 1 , cos (90 degrees) = 0
+cos(45 degrees) = 0.71.
+
+-specular : reflected perfectly from source to viewer.
+-Combine Ambient, Diffuse and Specular.
+
+Flat Shading : use each normal from the faces.
+
+Phong shading is good for complex models not so for simple ones.
+each vertex have an average of the normals of all the surfaces it is part of.
+#direction light , point light and spot light.
+
 ![Alt Text](https://github.com/Manoloon/OpenGLTest/blob/main/opengl.gif)

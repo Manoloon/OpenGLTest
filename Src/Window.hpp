@@ -36,7 +36,6 @@ class Window{
         TheWin->yChange = TheWin->yLast - yPos;
         TheWin->xLast = xPos;
         TheWin->yLast = yPos;
-       // printf("yaw: %.6f, pitch: %.6f",TheWin->xChange,TheWin->yChange);
     }
 
     public:
@@ -91,6 +90,7 @@ class Window{
         // Setup viewport size (THE VIEW)
         glViewport(0,0,bufferWidth,bufferHeight);
         glfwSetWindowUserPointer(mainWindow,this);
+
         return 0;
     }
 

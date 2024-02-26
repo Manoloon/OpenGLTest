@@ -18,6 +18,7 @@
 #include "Src/Shader.hpp"
 #include "Src/Camera.hpp"
 #include "Src/Texture.hpp"
+#include "Src/Light.hpp"
 
 const float ToRad = 3.14159265f / 180.f;
 
@@ -30,9 +31,10 @@ static const char* vShader = "Shaders/shader.vert";
 
 //  Fragment shader
 static const char* fShader ="Shaders/shader.frag";
-
-static const char* Texture1Loc = "Textures/brick.png";
-static const char* Texture2Loc = "Textures/dirt.png";
+// static const char* Texture1Loc = "Textures/brick.png";
+// static const char* Texture2Loc = "Textures/dirt.png";
+static const char* Texture1Loc = "Textures/tile.png";
+static const char* Texture2Loc = "Textures/tile2.png";
 
 void CreateObjects(){
     unsigned int indices[]{
@@ -46,8 +48,8 @@ void CreateObjects(){
         //x,     y,    z,      U,       V
         -1.f,   -1.f,   0.f,    0.0f,   0.0f,
         0.f,    -1.f,   1.f,    0.5f,   0.0f,
-        1.f,    -1.f,   0.f,    1.0f,   0.0f,
-        0.f,    1.f,    0.f,    0.5f,   1.0f
+        1.f,    -1.f,   0.f,    8.0f,   0.0f,
+        0.f,    1.f,    0.f,    0.5f,   8.0f
     };
 
     std::shared_ptr<Mesh> obj1 = std::make_shared<Mesh>();
@@ -76,16 +78,20 @@ int main()
     CreateObjects();
     CreateShaders();
 
-    Camera camera;
+    std::unique_ptr<Camera> camera = std::make_unique<Camera>();
     
     std::unique_ptr<Texture> Text1 = std::make_unique<Texture>();
     Text1->LoadTexture(Texture1Loc);
     std::unique_ptr<Texture> Text2 = std::make_unique<Texture>();
     Text2->LoadTexture(Texture2Loc);
 
+    std::unique_ptr<Light> mainLight = std::make_unique<Light>(glm::vec3(1.0f,1.0f,1.0f),0.5f);
+
     GLuint uniformModel = 0;
     GLuint uniformView = 0;
     GLuint uniformProjection = 0;
+    GLuint uniformAmbientIntensity =0;
+    GLuint uniformAmbientColour=0;
     glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,1000.0f);
     ///
     GLfloat lastFrameTime = 0.0f;
@@ -100,8 +106,8 @@ int main()
         lastFrameTime = now;
         // inputs events
         glfwPollEvents();
-        camera.MouseControl(MainWindow.GetXChange(),MainWindow.GetYChange());
-        camera.KeyControl(MainWindow.GetWindow(),deltaTime);
+        camera->MouseControl(MainWindow.GetXChange(),MainWindow.GetYChange());
+        camera->KeyControl(MainWindow.GetWindow(),deltaTime);
         // clear window (from 0 to 1 RGBA)
         glClearColor(0.3f,0.5f,1.0f,1.f);
         // we are now clearing the depth buffer too.
@@ -111,7 +117,11 @@ int main()
         uniformModel = shaderList[0]->GetModelLocation();
         uniformView = shaderList[0]->GetViewLocation();
         uniformProjection = shaderList[0]->GetProjectionLocation();
+        uniformAmbientColour = shaderList[0]->GetAmbientColourLocation();
+        uniformAmbientIntensity = shaderList[0]->GetAmbientIntensityLocation();
 
+        // create the mainlight
+        mainLight->UseLight(uniformAmbientIntensity,uniformAmbientColour);
         // bind the uniform value with the value
         glm::mat4 model(1.0f);
         model = glm::translate(model,glm::vec3(0.0f,0.0f,-1.1f));
@@ -127,7 +137,7 @@ int main()
         model = glm::scale(model,glm::vec3(1.0f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
 
-        glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(camera.CalculateViewMatrix()));
+        glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(camera->CalculateViewMatrix()));
         Text2->UseTexture();
         meshList[1]->RenderMesh();
        
