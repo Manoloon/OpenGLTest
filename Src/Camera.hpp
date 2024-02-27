@@ -8,7 +8,7 @@ class Camera{
     glm::vec3 forwardVector = {0.0f, 0.0f, -1.0f};
     glm::vec3 upVector = {0.0f,1.0f,0.0f};
     glm::vec3 WorldUpVector = {0.0f,1.0f,0.0f}; 
-    glm::vec3 rightVector = {1.0f,0.0f,0.0f};;
+    glm::vec3 rightVector = {1.0f,0.0f,0.0f};
     GLfloat yaw = -90.0f;
     GLfloat pitch = 0.0f;
     GLfloat roll = 0.0f;
@@ -67,4 +67,6 @@ class Camera{
         glm::mat4 CalculateViewMatrix(){
             return glm::lookAt(cameraPosition, cameraPosition + forwardVector,upVector);
         }
+
+        glm::vec3 GetPosition() const {return cameraPosition;}
 };

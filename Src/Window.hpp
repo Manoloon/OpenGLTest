@@ -42,8 +42,8 @@ class Window{
 
     Window()=default;
     explicit Window(GLint winWidth, GLint winHeight):winWidth(winWidth),winHeight(winHeight){
-        GLfloat xChange = 0.0f;
-        GLfloat yChange = 0.0f;
+        xChange = 0.0f;
+        yChange = 0.0f;
     }       
     
     int Initialise(){

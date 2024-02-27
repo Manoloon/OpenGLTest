@@ -13,7 +13,7 @@ public:
     explicit Light(glm::vec3 RGB, GLfloat intensity,glm::vec3 directionLocation, GLfloat diffuseIntensity):colour(RGB),ambientIntensity(intensity),
                         direction(directionLocation),diffuseIntensity(diffuseIntensity){}
 
-    void UseLight(GLfloat ambientIntensityLocation, GLfloat ambientColourLocation, GLfloat directionLocation, GLfloat diffuseIntensityLocation)
+    void UseLight(GLuint ambientIntensityLocation, GLuint ambientColourLocation, GLuint directionLocation, GLuint diffuseIntensityLocation)
     {
         glUniform3f(ambientColourLocation,colour.x,colour.y,colour.z);
         glUniform1f(ambientIntensityLocation,ambientIntensity);
