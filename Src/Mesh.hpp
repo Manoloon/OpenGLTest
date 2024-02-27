@@ -37,11 +37,14 @@ class Mesh{
                     stride : you can have the color of each vertice on the same array ,if so , stride would be 3 , because thats the amount 
                     of data that you want to jump from , -1.f,-1.f,0.f, to 1.f,-1.f,0.f.
                 */
-            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,VertSize * 5,0);
+            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, VertSize * 8,0);
             glEnableVertexAttribArray(0);
 
-            glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,VertSize * 5,(void*)(VertSize * 3));
+            glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,VertSize * 8, (void*)(VertSize * 3));
             glEnableVertexAttribArray(1);
+
+            glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,VertSize * 8, (void*)(VertSize * 5));
+            glEnableVertexAttribArray(2);
 
             glBindBuffer(GL_ARRAY_BUFFER,0);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

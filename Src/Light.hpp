@@ -6,13 +6,20 @@ class Light{
     glm::vec3 colour = {1.0f,1.0f,1.0f};
     GLfloat ambientIntensity = 1.0f;
 
-public:
-    explicit Light(glm::vec3 RGB, GLfloat intensity):colour(RGB),ambientIntensity(intensity){}
+    glm::vec3 direction = {0.0f,-1.0f,0.0f};
+    GLfloat diffuseIntensity = 0.0f;
 
-    void UseLight(GLfloat ambientIntensityLocation, GLfloat ambientColourLocation)
+public:
+    explicit Light(glm::vec3 RGB, GLfloat intensity,glm::vec3 directionLocation, GLfloat diffuseIntensity):colour(RGB),ambientIntensity(intensity),
+                        direction(directionLocation),diffuseIntensity(diffuseIntensity){}
+
+    void UseLight(GLfloat ambientIntensityLocation, GLfloat ambientColourLocation, GLfloat directionLocation, GLfloat diffuseIntensityLocation)
     {
         glUniform3f(ambientColourLocation,colour.x,colour.y,colour.z);
         glUniform1f(ambientIntensityLocation,ambientIntensity);
+
+        glUniform3f(directionLocation,direction.x,direction.y,direction.z);
+        glUniform1f(diffuseIntensityLocation,diffuseIntensity);
     }
 
 };

@@ -35,31 +35,87 @@ static const char* fShader ="Shaders/shader.frag";
 // static const char* Texture2Loc = "Textures/dirt.png";
 static const char* Texture1Loc = "Textures/tile.png";
 static const char* Texture2Loc = "Textures/tile2.png";
+void CalculateAvgNormals(unsigned int* indices,unsigned int indiceCount, GLfloat* vertices, unsigned int verticesCount, 
+                        unsigned int vlength, unsigned int normalOffset)
+    {
+            for(int i = 0; i < indiceCount; i+=3)
+        {
+            // each 3 columns * vlength(8)
+            unsigned int in0 = indices[i] * vlength;
+            unsigned int in1 = indices[i+1] * vlength;
+            unsigned int in2 = indices[i+2] * vlength;
+            
+            glm::vec3 v1 (
+            vertices[in1] - vertices[in0], 
+            vertices[in1 + 1] - vertices[in0 + 1],
+            vertices[in1 + 2] - vertices[in0 + 2]
+            );
+            
+            glm::vec3 v2(
+            vertices[in2] - vertices[in0], 
+            vertices[in2 + 1] - vertices[in0 + 1],
+            vertices[in2 + 2] - vertices[in0 + 2]
+            );
+            glm::vec3 normal = glm::cross(v1,v2);
+            normal = glm::normalize(normal);
+            
+            // now we are going to use the vertices normals data.
+            in0 += normalOffset; 
+            in1 += normalOffset;
+            in2 += normalOffset;
+            
+            vertices[in0] += normal.x;
+            vertices[in0 + 1] += normal.y;
+            vertices[in0 + 2] += normal.z;
+            
+            vertices[in1] += normal.x;
+            vertices[in1 + 1] += normal.y;
+            vertices[in1 + 2] += normal.z;
+            
+            vertices[in2] += normal.x;
+            vertices[in2 + 1] += normal.y;
+            vertices[in2 + 2] += normal.z;
+        }	
+        
+        for(int i = 0 ; i < verticesCount/vlength; i++)
+        {
+                unsigned int nOffset = i * vlength + normalOffset;
+                glm::vec3 vec(vertices[nOffset],vertices[nOffset+1],vertices[nOffset+2]);
+                vec = glm::normalize(vec);
+                vertices[nOffset] = vec.x;
+                vertices[nOffset+1] = vec.y;
+                vertices[nOffset+2] = vec.z;
+        }
+    }
 
-void CreateObjects(){
-    unsigned int indices[]{
-        0,3,1, // one side if pyramid
-        1,3,2, // other side 
-        2,3,0, // front face
-        0,1,2 // base of pyramid
-    };
+void CreateObjects()
+    {
+        unsigned int indices[]
+        {
+            0,3,1, // one side if pyramid
+            1,3,2, // other side 
+            2,3,0, // front face
+            0,1,2 // base of pyramid
+        };
 
-    GLfloat vertices[]{
-        //x,     y,    z,      U,       V
-        -1.f,   -1.f,   0.f,    0.0f,   0.0f,
-        0.f,    -1.f,   1.f,    0.5f,   0.0f,
-        1.f,    -1.f,   0.f,    8.0f,   0.0f,
-        0.f,    1.f,    0.f,    0.5f,   8.0f
-    };
+        GLfloat vertices[]{
+            //x,     y,    z,      U,       V       Nx      Ny      Nz
+            -1.f,   -1.f,   0.f,    0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            0.f,    -1.f,   1.f,    0.5f,   0.0f,   0.0f,   0.0f,   0.0f,
+            1.f,    -1.f,   0.f,    8.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            0.f,    1.f,    0.f,    0.5f,   8.0f,   0.0f,   0.0f,   0.0f
+        };
 
-    std::shared_ptr<Mesh> obj1 = std::make_shared<Mesh>();
-    obj1->CreateMesh(vertices,indices,20,12);
-    meshList.emplace_back(obj1);
+        CalculateAvgNormals(indices,12,vertices,32,8,5);
 
-    std::shared_ptr<Mesh> obj2 = std::make_shared<Mesh>();
-    obj2->CreateMesh(vertices,indices,20,12);
-    meshList.emplace_back(obj2);
-}
+        std::shared_ptr<Mesh> obj1 = std::make_shared<Mesh>();
+        obj1->CreateMesh(vertices,indices,32,12);
+        meshList.emplace_back(obj1);
+
+        std::shared_ptr<Mesh> obj2 = std::make_shared<Mesh>();
+        obj2->CreateMesh(vertices,indices,32,12);
+        meshList.emplace_back(obj2);
+    }
 
 void CreateShaders(){
     std::shared_ptr<Shader> Shader1 = std::make_shared<Shader>();
@@ -85,13 +141,16 @@ int main()
     std::unique_ptr<Texture> Text2 = std::make_unique<Texture>();
     Text2->LoadTexture(Texture2Loc);
 
-    std::unique_ptr<Light> mainLight = std::make_unique<Light>(glm::vec3(1.0f,1.0f,1.0f),0.5f);
+    std::unique_ptr<Light> mainLight = std::make_unique<Light>(glm::vec3(1.0f,1.0f,1.0f),0.5f,glm::vec3(1.0f,0.5f,1.0f),1.0f);
 
     GLuint uniformModel = 0;
     GLuint uniformView = 0;
     GLuint uniformProjection = 0;
     GLuint uniformAmbientIntensity =0;
     GLuint uniformAmbientColour=0;
+    GLuint uniformDiffuseDirection=0;
+    GLuint uniformDiffuseIntensity=0;
+
     glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,1000.0f);
     ///
     GLfloat lastFrameTime = 0.0f;
@@ -119,9 +178,11 @@ int main()
         uniformProjection = shaderList[0]->GetProjectionLocation();
         uniformAmbientColour = shaderList[0]->GetAmbientColourLocation();
         uniformAmbientIntensity = shaderList[0]->GetAmbientIntensityLocation();
+        uniformDiffuseDirection = shaderList[0]->GetDiffuseDirection();
+        uniformDiffuseIntensity = shaderList[0]->GetDiffuseIntensity();
 
         // create the mainlight
-        mainLight->UseLight(uniformAmbientIntensity,uniformAmbientColour);
+        mainLight->UseLight(uniformAmbientIntensity,uniformAmbientColour,uniformDiffuseDirection,uniformDiffuseIntensity);
         // bind the uniform value with the value
         glm::mat4 model(1.0f);
         model = glm::translate(model,glm::vec3(0.0f,0.0f,-1.1f));

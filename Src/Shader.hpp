@@ -9,7 +9,8 @@
 
 class Shader{
 
-    GLuint shaderID,uniformProjection,uniformModel,uniformView,uniformAmbientColour,uniformAmbientIntensity;
+    GLuint shaderID,uniformProjection,uniformModel,uniformView,uniformAmbientColour,uniformAmbientIntensity = 0;
+    GLuint uniformDiffuseDirection, uniformDiffuseIntensity = 0;
 
     void CompileShader(const char* vertexCode, const char* fragmentCode){
             shaderID = glCreateProgram();
@@ -50,6 +51,8 @@ class Shader{
     uniformModel = glGetUniformLocation(shaderID,"model");
     uniformAmbientColour = glGetUniformLocation(shaderID,"dirLight.colour");
     uniformAmbientIntensity = glGetUniformLocation(shaderID,"dirLight.ambientIntensity");
+    uniformDiffuseDirection = glGetUniformLocation(shaderID,"dirLight.direction");
+    uniformDiffuseIntensity = glGetUniformLocation(shaderID,"dirLight.diffuseIntensity");
     }
 
     void AddShader(GLuint theProgram,const char* shaderCode,GLenum shaderType){
@@ -82,6 +85,7 @@ class Shader{
 
     public:
     Shader(){
+        //TODO : Hace falta un constructor?
         shaderID = 0;
         uniformModel = 0;
         uniformView = 0;
@@ -135,6 +139,10 @@ class Shader{
     GLuint GetAmbientColourLocation() const {return uniformAmbientColour;}
 
     GLuint GetAmbientIntensityLocation() const {return uniformAmbientIntensity;}
+
+    GLuint GetDiffuseDirection() const {return uniformDiffuseDirection;}
+
+    GLuint GetDiffuseIntensity() const {return uniformDiffuseIntensity;}
 
     void UseShader(){
         glUseProgram(shaderID);
