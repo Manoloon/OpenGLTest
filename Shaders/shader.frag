@@ -34,6 +34,7 @@ void main()
     vec4 diffuseCol = vec4(dirLight.colour,1.0f) * dirLight.diffuseIntensity * diffuseFactor; 
     
     vec4 specularCol = vec4(0,0,0,0);
+    
     if(diffuseFactor > 0.0f){
         vec3 fragToEye = normalize(eyePosition - FragPos);
         vec3 reflectedVertex = normalize(reflect(dirLight.direction,normalize(Normal)));

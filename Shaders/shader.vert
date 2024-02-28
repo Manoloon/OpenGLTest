@@ -23,6 +23,7 @@ void main()
     // convert mat3 = we dont need the 4th column which is transform in our model.
     // inverse and transpose = if we scaling in 1 dimension we are going to face problems, 
     // so we inverse and then transpose the model. 
+    
     Normal = mat3(transpose(inverse(model))) * norm;
     
     FragPos = (model * vec4(pos,1.0f)).xyz;

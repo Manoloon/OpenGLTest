@@ -57,6 +57,7 @@ class Shader{
     uniformDiffuseIntensity = glGetUniformLocation(shaderID,"dirLight.diffuseIntensity");
     uniformSpecularIntensity = glGetUniformLocation(shaderID,"material.specularIntensity");
     uniformSpecularShininess = glGetUniformLocation(shaderID,"material.shininess");
+    uniformEyePosition = glGetUniformLocation(shaderID,"eyePosition");
     }
 
     void AddShader(GLuint theProgram,const char* shaderCode,GLenum shaderType){
@@ -128,17 +129,11 @@ class Shader{
         return content;  
     }
 
-    GLuint GetProjectionLocation() const {
-        return uniformProjection;
-    }
+    GLuint GetProjectionLocation() const { return uniformProjection; }
 
-    GLuint GetViewLocation() const{
-        return uniformView;
-    }
+    GLuint GetViewLocation() const{return uniformView;}
 
-    GLuint GetModelLocation() const {
-        return uniformModel;
-    }
+    GLuint GetModelLocation() const { return uniformModel; }
 
     GLuint GetAmbientColourLocation() const {return uniformAmbientColour;}
 

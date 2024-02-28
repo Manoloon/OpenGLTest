@@ -32,14 +32,16 @@ static const char* vShader = "Shaders/shader.vert";
 
 //  Fragment shader
 static const char* fShader ="Shaders/shader.frag";
-// static const char* Texture1Loc = "Textures/brick.png";
-// static const char* Texture2Loc = "Textures/dirt.png";
-static const char* Texture1Loc = "Textures/tile.png";
-static const char* Texture2Loc = "Textures/tile2.png";
+
+static const char* Texture1Loc = "Textures/brick.png";
+static const char* Texture2Loc = "Textures/dirt.png";
+//static const char* Texture1Loc = "Textures/tile.png";
+//static const char* Texture2Loc = "Textures/tile2.png";
+
 void CalculateAvgNormals(unsigned int* indices,unsigned int indiceCount, GLfloat* vertices, unsigned int verticesCount, 
                         unsigned int vlength, unsigned int normalOffset)
     {
-            for(size_t i = 0; i < indiceCount; i+=3)
+        for(size_t i = 0; i < indiceCount; i+=3)
         {
             // each 3 columns * vlength(8)
             unsigned int in0 = indices[i] * vlength;
@@ -101,10 +103,10 @@ void CreateObjects()
 
         GLfloat vertices[]{
             //x,     y,    z,      U,       V       Nx      Ny      Nz
-            -1.f,   -1.f,  -0.6f,    0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            -1.f,   -1.f,  -0.6f,  0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
             0.f,    -1.f,  1.f,    0.5f,   0.0f,   0.0f,   0.0f,   0.0f,
-            1.f,    -1.f,  -0.6f,    8.0f,   0.0f,   0.0f,   0.0f,   0.0f,
-            0.f,    1.f,   0.f,    0.5f,   8.0f,   0.0f,   0.0f,   0.0f
+            1.f,    -1.f,  -0.6f,  1.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            0.f,    1.f,   0.f,    0.5f,   1.0f,   0.0f,   0.0f,   0.0f
         };
 
         CalculateAvgNormals(indices,12,vertices,32,8,5);
@@ -142,8 +144,8 @@ int main()
     std::unique_ptr<Texture> Text2 = std::make_unique<Texture>();
     Text2->LoadTexture(Texture2Loc);
     
-    std::unique_ptr<Material> ShinyMaterial = std::make_unique<Material>(1.0,32);
-    std::unique_ptr<Material> DullMaterial = std::make_unique<Material>(0.3f,8);
+    std::unique_ptr<Material> ShinyMaterial = std::make_unique<Material>(1.0f,32);
+    std::unique_ptr<Material> DullMaterial = std::make_unique<Material>(0.3f,4);
 
     std::unique_ptr<Light> mainLight = std::make_unique<Light>(glm::vec3(1.0f,1.0f,1.0f),0.5f,glm::vec3(2.0f,-1.5f,-2.0f),0.3f);
 
@@ -183,14 +185,13 @@ int main()
         uniformModel = shaderList[0]->GetModelLocation();
         uniformView = shaderList[0]->GetViewLocation();
         uniformProjection = shaderList[0]->GetProjectionLocation();
+        uniformEyePosition = shaderList[0]->GetEyePositionLocation();
         uniformAmbientColour = shaderList[0]->GetAmbientColourLocation();
         uniformAmbientIntensity = shaderList[0]->GetAmbientIntensityLocation();
         uniformDiffuseDirection = shaderList[0]->GetDiffuseDirectionLocation();
         uniformDiffuseIntensity = shaderList[0]->GetDiffuseIntensityLocation();
         uniformSpecularIntensity = shaderList[0]->GetSpecularIntensityLocation();
         uniformSpecularShininess = shaderList[0]->GetSpecularShininessLocation();
-        uniformEyePosition = shaderList[0]->GetEyePositionLocation();
-        
         
         // create the mainlight
         mainLight->UseLight(uniformAmbientIntensity,uniformAmbientColour,uniformDiffuseDirection,uniformDiffuseIntensity);
@@ -199,9 +200,9 @@ int main()
         glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(camera->CalculateViewMatrix()));
         glUniform3f(uniformEyePosition,camera->GetPosition().x,camera->GetPosition().y,camera->GetPosition().z);
 
-
         // bind the uniform value with the value
         glm::mat4 model(1.0f);
+
         model = glm::translate(model,glm::vec3(0.0f,0.0f,-4.0f));
        // model = glm::rotate(model, 45.0f * ToRad, glm::vec3(0.0f,1.0f,0.0f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
