@@ -38,8 +38,7 @@ static const char* fShader ="Shaders/shader.frag";
 
 static const char* Texture1Loc = "Textures/brick.png";
 static const char* Texture2Loc = "Textures/dirt.png";
-//static const char* Texture1Loc = "Textures/tile.png";
-//static const char* Texture2Loc = "Textures/tile2.png";
+static const char* Texture3Loc = "Textures/tile.png";
 
 void CalculateAvgNormals(unsigned int* indices,unsigned int indiceCount, GLfloat* vertices, unsigned int verticesCount, 
                         unsigned int vlength, unsigned int normalOffset)
@@ -163,26 +162,30 @@ int main()
 
     std::unique_ptr<Camera> camera = std::make_unique<Camera>();
     
-    std::unique_ptr<Texture> Text1 = std::make_unique<Texture>();
+    auto Text1 = std::make_unique<Texture>();
     Text1->LoadTexture(Texture1Loc);
-    std::unique_ptr<Texture> Text2 = std::make_unique<Texture>();
+    auto Text2 = std::make_unique<Texture>();
     Text2->LoadTexture(Texture2Loc);
+    auto texFloor = std::make_unique<Texture>();
+    texFloor->LoadTexture(Texture3Loc);
     
+    auto SuperShinyMat = std::make_unique<Material>(1.0f,256);
     auto ShinyMaterial = std::make_unique<Material>(1.0f,32);
     auto DullMaterial = std::make_unique<Material>(0.3f,4);
     // RGB,intensity,directionLocation,diffuseIntensity)
     auto directionalLight = std::make_shared<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                             1.0f,glm::vec3(0.0f,-1.0f,-1.0f),0.5f);
+                                             0.3f,glm::vec3(0.0f,-1.0f,-1.0f),0.5f);
     unsigned int pointLightCount =0;
     std::shared_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
-
-    PointLights[0] = std::make_shared<PointLight>(glm::vec3(0.0f,0.0f,1.0f),0.0f,1.0f,
-                                                 glm::vec3(0.0f,0.0f,0.0f),
-                                                    0.3f,0.2f,0.1f);
+    // RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
+    PointLights[0] = std::make_shared<PointLight>(glm::vec3(0.0f,0.0f,1.0f),
+                                                 1.0f,0.7f,
+                                                 glm::vec3(0.0f,1.0f,-1.0f),
+                                                 0.3f,0.2f,0.1f);
     pointLightCount++;
-    PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),0.0f,1.0f,
+    PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),0.0f,0.7f,
                                                  glm::vec3(-4.0f,2.0f,0.0f),
-                                                    0.3f,0.2f,0.1f);
+                                                    0.7f,0.4f,0.3f);
     pointLightCount++;
     GLuint uniformModel = 0;
     GLuint uniformView = 0;
@@ -252,8 +255,8 @@ int main()
         model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
 
-        Text1->UseTexture();
-        ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
+        texFloor->UseTexture();
+        SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
         meshList[2]->RenderMesh();
         //
 
