@@ -120,7 +120,7 @@ void CreateObjects()
 
         GLfloat floorVertices[]
         {
-//x,     y,    z,      U,       V       Nx      Ny      Nz
+            //x,     y,    z,      U,       V       Nx      Ny      Nz
             -10.f,   0.f,  -10.0f,  0.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
             10.f,    0.f,  -10.f,   10.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
             -10.f,   0.f,  10.0f,   0.0f,   10.0f,   0.0f,   -1.0f,   0.0f,
@@ -137,9 +137,9 @@ void CreateObjects()
         obj2->CreateMesh(vertices,indices,32,12);
         meshList.emplace_back(obj2);
 
-        std::shared_ptr<Mesh> boxObj = std::make_shared<Mesh>();
-        boxObj->CreateMesh(floorVertices,floorIndices,32,6);
-        meshList.emplace_back(boxObj);
+        std::shared_ptr<Mesh> floorObj = std::make_shared<Mesh>();
+        floorObj->CreateMesh(floorVertices,floorIndices,32,6);
+        meshList.emplace_back(floorObj);
     }
 
 void CreateShaders()
@@ -169,24 +169,26 @@ int main()
     auto texFloor = std::make_unique<Texture>();
     texFloor->LoadTexture(Texture3Loc);
     
-    auto SuperShinyMat = std::make_unique<Material>(1.0f,256);
+    auto SuperShinyMat = std::make_unique<Material>(4.0f,256);
     auto ShinyMaterial = std::make_unique<Material>(1.0f,32);
     auto DullMaterial = std::make_unique<Material>(0.3f,4);
     // RGB,intensity,directionLocation,diffuseIntensity)
-    auto directionalLight = std::make_shared<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                             0.3f,glm::vec3(0.0f,-1.0f,-1.0f),0.5f);
+    auto directionalLight = std::make_shared<DirectionalLight>(glm::vec3(0.3f,0.3f,0.3f),
+                                             0.3f,glm::vec3(1.0f,0.0f,0.0f),0.5f);
     unsigned int pointLightCount =0;
     std::shared_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
     // RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
-    PointLights[0] = std::make_shared<PointLight>(glm::vec3(0.0f,0.0f,1.0f),
+    PointLights[0] = std::make_shared<PointLight>(glm::vec3(1.0f,0.0f,0.0f),
                                                  1.0f,0.7f,
-                                                 glm::vec3(0.0f,1.0f,-1.0f),
-                                                 0.3f,0.2f,0.1f);
+                                                 glm::vec3(0.0f,2.0f,0.0f),
+                                                 0.7f,0.3f,0.3f);
     pointLightCount++;
-    PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),0.0f,0.7f,
-                                                 glm::vec3(-4.0f,2.0f,0.0f),
+    PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),
+                                                 0.6f,0.7f,
+                                                 glm::vec3(0.0f,2.0f,0.0f),
                                                     0.7f,0.4f,0.3f);
     pointLightCount++;
+
     GLuint uniformModel = 0;
     GLuint uniformView = 0;
     GLuint uniformProjection = 0;
@@ -232,7 +234,6 @@ int main()
 
         // bind the uniform value with the value
         glm::mat4 model(1.0f);
-
         model = glm::translate(model,glm::vec3(0.0f,0.0f,-4.0f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
        
@@ -250,7 +251,7 @@ int main()
         meshList[1]->RenderMesh();
         //
 
-        // this is an obj on a the scene.
+        // Floor this is an obj on a the scene.
         model = glm::mat4(1.0f);
         model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
@@ -258,7 +259,6 @@ int main()
         texFloor->UseTexture();
         SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
         meshList[2]->RenderMesh();
-        //
 
         // and close the program
         glUseProgram(0);
