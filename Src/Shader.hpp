@@ -8,13 +8,16 @@
 #include <GL/glew.h>
 #include "DirectionalLight.hpp"
 #include "PointLight.hpp"
+#include "SpotLight.hpp"
 #include "Constants.h"
 class Shader{
     int pointLightCount=0;
+    int spotLightCount=0;
 
     GLuint shaderID,uniformProjection,uniformModel,uniformView, uniformEyePosition =0;
     GLuint uniformSpecularIntensity, uniformSpecularShininess = 0;
     GLuint uniformPointLightCount = 0;
+    GLuint uniformSpotLightCount = 0;
 
     struct 
     {
@@ -34,6 +37,19 @@ class Shader{
         GLuint uniformLinear;
         GLuint uniformExponent;
     }FUniformPointLights[MAX_POINT_LIGHTS];
+
+    struct
+    {
+        GLuint uniformColour;
+        GLuint uniformAmbientIntensity;
+        GLuint uniformDiffuseIntensity;
+        GLuint uniformPosition;
+        GLuint uniformDirection;
+        GLuint uniformEdge;
+        GLuint uniformConstant;
+        GLuint uniformLinear;
+        GLuint uniformExponent;
+    }FUniformSpotLights[MAX_SPOT_LIGHTS];
 
     void CompileShader(const char* vertexCode, const char* fragmentCode)
     {
@@ -83,6 +99,7 @@ class Shader{
         uniformSpecularShininess = glGetUniformLocation(shaderID,"material.shininess");
         uniformEyePosition = glGetUniformLocation(shaderID,"eyePosition");
         uniformPointLightCount = glGetUniformLocation(shaderID,"pointLightCount");
+        uniformSpotLightCount = glGetUniformLocation(shaderID,"spotLightCount");
 
         for(size_t i = 0; i < MAX_POINT_LIGHTS; i++)
         {
@@ -108,6 +125,38 @@ class Shader{
 
             snprintf(locBuff,sizeof(locBuff),"pLights[%d].exponent",i);
             FUniformPointLights[i].uniformExponent = glGetUniformLocation(shaderID,locBuff);
+        }
+
+         for(size_t i = 0; i < MAX_SPOT_LIGHTS; i++)
+        {
+            char locBuff[100] = {'\0'};
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].base.base.colour",i);
+            FUniformSpotLights[i].uniformColour = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].base.base.ambientIntensity",i);
+            FUniformSpotLights[i].uniformAmbientIntensity = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].base.position",i);
+            FUniformSpotLights[i].uniformPosition = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].base.base.diffuseIntensity",i);
+            FUniformSpotLights[i].uniformDiffuseIntensity = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].base.constant",i);
+            FUniformSpotLights[i].uniformConstant = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].base.linear",i);
+            FUniformSpotLights[i].uniformLinear = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].base.exponent",i);
+            FUniformSpotLights[i].uniformExponent = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].direction",i);
+            FUniformSpotLights[i].uniformDirection = glGetUniformLocation(shaderID,locBuff);
+
+            snprintf(locBuff,sizeof(locBuff),"sLights[%d].edge",i);
+            FUniformSpotLights[i].uniformEdge = glGetUniformLocation(shaderID,locBuff);
         }
     }
 
@@ -227,6 +276,25 @@ class Shader{
                             FUniformPointLights[i].uniformConstant,
                             FUniformPointLights[i].uniformLinear,
                             FUniformPointLights[i].uniformExponent);
+        }
+    }
+
+    void SetSpotLights(SpotLight* sLight,unsigned int lightCount)
+    {
+        if(lightCount > MAX_SPOT_LIGHTS) lightCount = MAX_SPOT_LIGHTS;
+        glUniform1i(uniformSpotLightCount,lightCount);
+        for(size_t i =0 ; i < lightCount;i++){
+            //ambientIntensityLocation,ambientColourLocation,positionLocation,directionLocation,edgeLocation,diffuseIntensityLocation
+            //,constantLocation, linearLocation, GLuint exponentLocation
+            sLight[i].Use(FUniformSpotLights[i].uniformAmbientIntensity,
+                            FUniformSpotLights[i].uniformColour,
+                            FUniformSpotLights[i].uniformPosition,
+                            FUniformSpotLights[i].uniformDirection,
+                            FUniformSpotLights[i].uniformEdge,
+                            FUniformSpotLights[i].uniformDiffuseIntensity,
+                            FUniformSpotLights[i].uniformConstant,
+                            FUniformSpotLights[i].uniformLinear,
+                            FUniformSpotLights[i].uniformExponent);
         }
     }
 

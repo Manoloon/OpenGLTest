@@ -4,7 +4,7 @@
 
 class Camera{
     glm::vec3 cameraPosition = {0.0f, 0.0f, 0.0f};
-    glm::vec3 CameraDirection = {0.0f, 0.0f, 0.0f};
+    //glm::vec3 CameraDirection = {0.0f, 0.0f, 0.0f};
     glm::vec3 forwardVector = {0.0f, 0.0f, -1.0f};
     glm::vec3 upVector = {0.0f,1.0f,0.0f};
     glm::vec3 WorldUpVector = {0.0f,1.0f,0.0f}; 
@@ -69,4 +69,5 @@ class Camera{
         }
 
         glm::vec3 GetPosition() const {return cameraPosition;}
+        glm::vec3 GetDirection() const {return forwardVector;}
 };

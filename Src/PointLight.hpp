@@ -6,6 +6,7 @@
 
 class PointLight : public Light
 {
+    protected:
     glm::vec3 position = glm::vec3(0.0f,0.0f,0.0f);
     GLfloat constant = 1.0f;
     GLfloat linear = 0.0f;

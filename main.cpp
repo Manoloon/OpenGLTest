@@ -22,6 +22,7 @@
 #include "Src/Texture.hpp"
 #include "Src/DirectionalLight.hpp"
 #include "Src/PointLight.hpp"
+#include "Src/SpotLight.hpp"
 #include "Src/Material.hpp"
 
 const float ToRad = 3.14159265f / 180.f;
@@ -173,22 +174,35 @@ int main()
     auto ShinyMaterial = std::make_unique<Material>(1.0f,32);
     auto DullMaterial = std::make_unique<Material>(0.3f,4);
     // RGB,intensity,directionLocation,diffuseIntensity)
-    auto directionalLight = std::make_shared<DirectionalLight>(glm::vec3(0.3f,0.3f,0.3f),
-                                             0.3f,glm::vec3(1.0f,0.0f,0.0f),0.5f);
+    auto directionalLight = std::make_shared<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
+                                             0.1f,glm::vec3(0.0f,0.0f,-1.0f),0.1f);
+    /* POINT LIGHTS */
     unsigned int pointLightCount =0;
     std::shared_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
     // RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
     PointLights[0] = std::make_shared<PointLight>(glm::vec3(1.0f,0.0f,0.0f),
                                                  1.0f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
-                                                 0.7f,0.3f,0.3f);
-    pointLightCount++;
+                                                 0.3f,0.2f,0.1f);
+   // pointLightCount++;
     PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),
                                                  0.6f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
-                                                    0.7f,0.4f,0.3f);
-    pointLightCount++;
-
+                                                    0.3f,0.2f,0.1f);
+   // pointLightCount++;
+    ///////////////////////////////////////////////////////////////////////////////
+     /* SPOT LIGHTS */
+    unsigned int spotLightCount = 0;
+    std::shared_ptr<SpotLight> SpotLights[MAX_SPOT_LIGHTS];
+    //RGB, intensity, diffuseIntensity, pos, dir, edge, cons, lin,  exp
+    SpotLights[0] = std::make_shared<SpotLight>(glm::vec3(1.0f,1.0f,1.0f),
+                                                0.3f,0.2f,
+                                                glm::vec3(0.0f,-1.5f,0.0f),
+                                                glm::vec3(-100.0f,-1.0f,0.0f),
+                                                20.0f,
+                                                1.0f,0.0f,0.0f);
+    spotLightCount++;
+    ///////////////////////////////////////////////////////////////////////////////
     GLuint uniformModel = 0;
     GLuint uniformView = 0;
     GLuint uniformProjection = 0;
@@ -225,13 +239,16 @@ int main()
         uniformSpecularIntensity = shaderList[0]->GetSpecularIntensityLocation();
         uniformSpecularShininess = shaderList[0]->GetSpecularShininessLocation();
 
+        SpotLights[0]->SetTransform(camera->GetPosition(),camera->GetDirection());
+
         shaderList[0]->SetDirectionalLight(directionalLight.get());
         shaderList[0]->SetPointLights(PointLights->get(),pointLightCount);
+        shaderList[0]->SetSpotLights(SpotLights->get(),spotLightCount);
 
         glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projection));
         glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(camera->CalculateViewMatrix()));
         glUniform3f(uniformEyePosition,camera->GetPosition().x,camera->GetPosition().y,camera->GetPosition().z);
-
+        
         // bind the uniform value with the value
         glm::mat4 model(1.0f);
         model = glm::translate(model,glm::vec3(0.0f,0.0f,-4.0f));
