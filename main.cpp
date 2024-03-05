@@ -184,12 +184,12 @@ int main()
                                                  1.0f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
                                                  0.3f,0.2f,0.1f);
-   // pointLightCount++;
+    pointLightCount++;
     PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),
                                                  0.6f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
                                                     0.3f,0.2f,0.1f);
-   // pointLightCount++;
+    pointLightCount++;
     ///////////////////////////////////////////////////////////////////////////////
      /* SPOT LIGHTS */
     unsigned int spotLightCount = 0;
