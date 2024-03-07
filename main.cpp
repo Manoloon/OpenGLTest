@@ -7,6 +7,7 @@
 #include <cmath>
 #include <vector>
 #include <memory>
+#include <Assimp/Importer.hpp>
 
 #include "GLM/glm.hpp"
 #include "GLM/gtc/matrix_transform.hpp"
@@ -15,6 +16,7 @@
 
 #include "Src/Constants.h"
 
+#include "Src/Model.hpp"
 #include "Src/Window.hpp"
 #include "Src/Mesh.hpp"
 #include "Src/Shader.hpp"
@@ -163,19 +165,22 @@ int main()
 
     std::unique_ptr<Camera> camera = std::make_unique<Camera>();
     
-    auto Text1 = std::make_unique<Texture>();
-    Text1->LoadTexture(Texture1Loc);
-    auto Text2 = std::make_unique<Texture>();
-    Text2->LoadTexture(Texture2Loc);
-    auto texFloor = std::make_unique<Texture>();
-    texFloor->LoadTexture(Texture3Loc);
+    auto Text1 = std::make_unique<Texture>(Texture1Loc);
+    Text1->LoadTextureWithAlpha();
+    auto Text2 = std::make_unique<Texture>(Texture2Loc);
+    Text2->LoadTextureWithAlpha();
+    auto texFloor = std::make_unique<Texture>(Texture3Loc);
+    texFloor->LoadTextureWithAlpha();
     
+    auto uh60Model = std::make_shared<Model>();
+    uh60Model->LoadModel("Models/uh60.obj");
+
     auto SuperShinyMat = std::make_unique<Material>(4.0f,256);
     auto ShinyMaterial = std::make_unique<Material>(1.0f,32);
     auto DullMaterial = std::make_unique<Material>(0.3f,4);
     // RGB,intensity,directionLocation,diffuseIntensity)
     auto directionalLight = std::make_shared<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                             0.1f,glm::vec3(0.0f,0.0f,-1.0f),0.1f);
+                                             0.1f,glm::vec3(0.0f,0.3f,0.0f),0.1f);
     /* POINT LIGHTS */
     unsigned int pointLightCount =0;
     std::shared_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
@@ -184,12 +189,12 @@ int main()
                                                  1.0f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
                                                  0.3f,0.2f,0.1f);
-   // pointLightCount++;
+    pointLightCount++;
     PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),
                                                  0.6f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
                                                     0.3f,0.2f,0.1f);
-   // pointLightCount++;
+    pointLightCount++;
     ///////////////////////////////////////////////////////////////////////////////
      /* SPOT LIGHTS */
     unsigned int spotLightCount = 0;
@@ -258,15 +263,14 @@ int main()
         ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
         meshList[0]->RenderMesh();
 
-        // this is an obj on a the scene.
+        //Model uh60
         model = glm::mat4(1.0f);
-        model = glm::translate(model,glm::vec3(3.0f,0.0f,-3.0f));
+        model = glm::translate(model,glm::vec3(3.0f,0.0f,1.0f));
+        model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+        model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
         glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-
-        Text2->UseTexture();
         DullMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
-        meshList[1]->RenderMesh();
-        //
+        uh60Model->RenderModel();
 
         // Floor this is an obj on a the scene.
         model = glm::mat4(1.0f);
