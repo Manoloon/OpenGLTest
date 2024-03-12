@@ -8,11 +8,10 @@
 #include <vector>
 #include <memory>
 #include <Assimp/Importer.hpp>
-
-#include "GLM/glm.hpp"
-#include "GLM/gtc/matrix_transform.hpp"
-#include "GLM/gtc/type_ptr.hpp"
-#include "GLM/mat4x4.hpp"
+#include <GLM/glm.hpp>
+#include <GLM/gtc/matrix_transform.hpp>
+#include <GLM/gtc/type_ptr.hpp>
+#include <GLM/mat4x4.hpp>
 
 #include "Src/Constants.h"
 
@@ -32,6 +31,7 @@ const float ToRad = 3.14159265f / 180.f;
 Window MainWindow;
 std::vector<std::shared_ptr<Mesh>> meshList;
 std::vector<std::shared_ptr<Shader>> shaderList;
+Shader DirectionalShadowShader;
 
 //  vertex shader
 static const char* vShader = "Shaders/shader.vert";
@@ -41,7 +41,30 @@ static const char* fShader ="Shaders/shader.frag";
 
 static const char* Texture1Loc = "Textures/brick.png";
 static const char* Texture2Loc = "Textures/dirt.png";
-static const char* Texture3Loc = "Textures/tile.png";
+
+std::shared_ptr<Texture> Text1;
+std::shared_ptr<Texture> Text2;
+std::shared_ptr<Model> uh60Model;
+std::unique_ptr<Material>  SuperShinyMat;
+std::unique_ptr<Material>  ShinyMaterial;
+std::unique_ptr<Material>  DullMaterial;
+
+GLuint uniformModel = 0;
+GLuint uniformView = 0;
+GLuint uniformProjection = 0;
+GLuint uniformSpecularIntensity=0;
+GLuint uniformSpecularShininess=0;
+GLuint uniformEyePosition =0;
+
+unsigned int pointLightCount =0;
+unsigned int spotLightCount = 0;
+std::unique_ptr<Camera> camera;
+    
+// RGB,intensity,directionLocation,diffuseIntensity,shadow map Width,shadow map height)
+std::shared_ptr<DirectionalLight> directionalLight;
+std::shared_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
+ /* SPOT LIGHTS */
+std::shared_ptr<SpotLight> SpotLights[MAX_SPOT_LIGHTS];
 
 void CalculateAvgNormals(unsigned int* indices,unsigned int indiceCount, GLfloat* vertices, unsigned int verticesCount, 
                         unsigned int vlength, unsigned int normalOffset)
@@ -124,10 +147,10 @@ void CreateObjects()
         GLfloat floorVertices[]
         {
             //x,     y,    z,      U,       V       Nx      Ny      Nz
-            -10.f,   0.f,  -10.0f,  0.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
-            10.f,    0.f,  -10.f,   10.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
-            -10.f,   0.f,  10.0f,   0.0f,   10.0f,   0.0f,   -1.0f,   0.0f,
-            10.f,    0.f,  10.f,    10.0f,   10.0f,   0.0f,   -1.0f,   0.0f
+            -20.f,   0.f,  -20.0f,   0.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
+             20.f,    0.f,  -20.f,   20.0f,  0.0f,   0.0f,   -1.0f,   0.0f,
+            -20.f,   0.f,  20.0f,    0.0f,   20.0f,   0.0f,   -1.0f,   0.0f,
+             20.f,    0.f,  20.f,    20.0f,  20.0f,   0.0f,   -1.0f,   0.0f
         };
 
         CalculateAvgNormals(indices,12,vertices,32,8,5);
@@ -149,74 +172,163 @@ void CreateShaders()
     {
         std::shared_ptr<Shader> Shader1 = std::make_shared<Shader>();
         Shader1->CreateFromFiles(vShader,fShader);
-        shaderList.emplace_back(Shader1); 
+        shaderList.emplace_back(Shader1);
+
+        std::shared_ptr<Shader> DirectionalShadowShader = std::make_shared<Shader>();
+        DirectionalShadowShader->CreateFromFiles("Shaders/dirShadowmap.vert","Shaders/dirShadowmap.frag");
     }
+
+void RenderScene()
+{
+    // piramid
+    glm::mat4 model(1.0f);
+    model = glm::translate(model,glm::vec3(0.0f,0.0f,-4.0f));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    Text1->UseTexture();
+    ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    meshList[0]->RenderMesh();
+
+    //Model uh60
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(-8.0f,2.0f,0.0f));
+    model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    uh60Model->RenderModel();
+    // //Model uh60
+    // model = glm::mat4(1.0f);
+    // model = glm::translate(model,glm::vec3(5.0f,-1.0f,1.5f));
+    // model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    // model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
+    // glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    // SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    // uh60Model->RenderModel();
+    // //Model uh60
+    // model = glm::mat4(1.0f);
+    // model = glm::translate(model,glm::vec3(-5.0f,-1.0f,2.0f));
+    // model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    // model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
+    // glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    // ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    // uh60Model->RenderModel();
+    
+    // Floor this is an obj on a the scene.
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    Text2->UseTexture();
+    ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    meshList[2]->RenderMesh();
+}
+
+void DirectionalShadowMapPass(std::shared_ptr<DirectionalLight> light)
+{
+    DirectionalShadowShader.UseShader();
+    //set viewport to same dimension as the framebuffer
+    glViewport(0,0,light->GetShadowMap()->GetShadowMapWidth(),
+                    light->GetShadowMap()->GetShadowMapHeight());
+
+    light->GetShadowMap()->Write();
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    uniformModel = DirectionalShadowShader.GetModelLocation();
+    glm::mat4 lightTransform = light->CalculateLightTransform();
+    DirectionalShadowShader.SetDirLightTransform(lightTransform);
+
+    RenderScene();
+    // detach after used.
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+}
+
+void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
+{
+    shaderList[0]->UseShader();
+    uniformModel = shaderList[0]->GetModelLocation();
+    uniformProjection = shaderList[0]->GetProjectionLocation();
+    uniformView = shaderList[0]->GetViewLocation();
+   
+    uniformEyePosition = shaderList[0]->GetEyePositionLocation();
+    uniformSpecularIntensity = shaderList[0]->GetSpecularIntensityLocation();
+    uniformSpecularShininess = shaderList[0]->GetSpecularShininessLocation();
+
+    // TODO : Create this function on windows class.
+    glViewport(0,0,1366,768);
+    // clear window (from 0 to 1 RGBA)
+    glClearColor(0.1f,0.1f,0.1f,1.0f);
+    // we are now clearing the depth buffer too.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(viewMatrix));
+    glUniform3f(uniformEyePosition,camera->GetPosition().x,camera->GetPosition().y,camera->GetPosition().z);
+    
+    shaderList[0]->SetDirectionalLight(directionalLight.get());
+    directionalLight->InitShadowMap();
+    glm::mat4 lightTransform = directionalLight->CalculateLightTransform();
+    shaderList[0]->SetDirLightTransform(lightTransform);
+    directionalLight->GetShadowMap()->Read(GL_TEXTURE1);
+    shaderList[0]->SetTexture(0);
+    shaderList[0]->SetDirectionalShadowMap(1);
+
+    shaderList[0]->SetPointLights(PointLights->get(),pointLightCount);
+    shaderList[0]->SetSpotLights(SpotLights->get(),spotLightCount);
+ 
+    SpotLights[0]->SetTransform(camera->GetPosition(),camera->GetDirection()); 
+    RenderScene();
+}
 
 int main()
 {  
     MainWindow = Window();
     MainWindow.Initialise();
-
-    GLfloat FOV = 45.0f;
-    GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
-     // DRAWING
+        
+    // DRAWING
     CreateObjects();
     CreateShaders();
 
-    std::unique_ptr<Camera> camera = std::make_unique<Camera>();
-    
-    auto Text1 = std::make_unique<Texture>(Texture1Loc);
+    GLfloat FOV = 45.0f;
+    GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
+    camera = std::make_unique<Camera>();
+
+    Text1 = std::make_unique<Texture>(Texture1Loc);
     Text1->LoadTextureWithAlpha();
-    auto Text2 = std::make_unique<Texture>(Texture2Loc);
+    Text2 = std::make_unique<Texture>(Texture2Loc);
     Text2->LoadTextureWithAlpha();
-    auto texFloor = std::make_unique<Texture>(Texture3Loc);
-    texFloor->LoadTextureWithAlpha();
-    
-    auto uh60Model = std::make_shared<Model>();
+      
+    uh60Model = std::make_shared<Model>();
     uh60Model->LoadModel("Models/uh60.obj");
 
-    auto SuperShinyMat = std::make_unique<Material>(4.0f,256);
-    auto ShinyMaterial = std::make_unique<Material>(1.0f,32);
-    auto DullMaterial = std::make_unique<Material>(0.3f,4);
-    // RGB,intensity,directionLocation,diffuseIntensity)
-    auto directionalLight = std::make_shared<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                             0.1f,glm::vec3(0.0f,0.3f,0.0f),0.1f);
-    /* POINT LIGHTS */
-    unsigned int pointLightCount =0;
-    std::shared_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
-    // RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
+    SuperShinyMat = std::make_unique<Material>(4.0f,256);
+    ShinyMaterial = std::make_unique<Material>(1.0f,32);
+    DullMaterial = std::make_unique<Material>(0.3f,4);
+     // RGB,intensity,direction,diffuseIntensity,shadow map width, shadow map height)
+    directionalLight = std::make_shared<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
+                                             1.0f,
+                                             glm::vec3(0.0f,-15.0f,10.0f),0.3f,
+                                             1024,1024);
+// RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
     PointLights[0] = std::make_shared<PointLight>(glm::vec3(1.0f,0.0f,0.0f),
                                                  1.0f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
                                                  0.3f,0.2f,0.1f);
-    pointLightCount++;
-    PointLights[1] = std::make_shared<PointLight>(glm::vec3(0.0f,1.0f,0.0f),
+   // pointLightCount++;
+    PointLights[1] = std::make_shared<PointLight>(glm::vec3(1.0f,1.0f,0.0f),
                                                  0.6f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
                                                     0.3f,0.2f,0.1f);
-    pointLightCount++;
-    ///////////////////////////////////////////////////////////////////////////////
-     /* SPOT LIGHTS */
-    unsigned int spotLightCount = 0;
-    std::shared_ptr<SpotLight> SpotLights[MAX_SPOT_LIGHTS];
+   // pointLightCount++;
     //RGB, intensity, diffuseIntensity, pos, dir, edge, cons, lin,  exp
     SpotLights[0] = std::make_shared<SpotLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                                0.3f,0.2f,
+                                                1.0f,0.2f,
                                                 glm::vec3(0.0f,-1.5f,0.0f),
                                                 glm::vec3(-100.0f,-1.0f,0.0f),
-                                                20.0f,
-                                                1.0f,0.0f,0.0f);
-    spotLightCount++;
+                                                30.0f,
+                                                1.0f,0.4f,0.3f);
+   // spotLightCount++;
     ///////////////////////////////////////////////////////////////////////////////
-    GLuint uniformModel = 0;
-    GLuint uniformView = 0;
-    GLuint uniformProjection = 0;
-    GLuint uniformSpecularIntensity=0;
-    GLuint uniformSpecularShininess=0;
-    GLuint uniformEyePosition =0;
-
     glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,1000.0f);
-    ///
+
     GLfloat lastFrameTime = 0.0f;
     GLfloat deltaTime = 0.0f;
 
@@ -231,60 +343,15 @@ int main()
         glfwPollEvents();
         camera->MouseControl(MainWindow.GetXChange(),MainWindow.GetYChange());
         camera->KeyControl(MainWindow.GetWindow(),deltaTime);
-        // clear window (from 0 to 1 RGBA)
-        glClearColor(0.1f,0.1f,0.1f,1.0f);
-        // we are now clearing the depth buffer too.
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        shaderList[0]->UseShader();
-        uniformModel = shaderList[0]->GetModelLocation();
-        uniformView = shaderList[0]->GetViewLocation();
-        uniformProjection = shaderList[0]->GetProjectionLocation();
-        uniformEyePosition = shaderList[0]->GetEyePositionLocation();
-        uniformSpecularIntensity = shaderList[0]->GetSpecularIntensityLocation();
-        uniformSpecularShininess = shaderList[0]->GetSpecularShininessLocation();
-
-        SpotLights[0]->SetTransform(camera->GetPosition(),camera->GetDirection());
-
-        shaderList[0]->SetDirectionalLight(directionalLight.get());
-        shaderList[0]->SetPointLights(PointLights->get(),pointLightCount);
-        shaderList[0]->SetSpotLights(SpotLights->get(),spotLightCount);
-
-        glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projection));
-        glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(camera->CalculateViewMatrix()));
-        glUniform3f(uniformEyePosition,camera->GetPosition().x,camera->GetPosition().y,camera->GetPosition().z);
         
-        // bind the uniform value with the value
-        glm::mat4 model(1.0f);
-        model = glm::translate(model,glm::vec3(0.0f,0.0f,-4.0f));
-        glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-       
-        Text1->UseTexture();
-        ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
-        meshList[0]->RenderMesh();
+        DirectionalShadowMapPass(directionalLight);
+        RenderPass(projection,camera->CalculateViewMatrix());
 
-        //Model uh60
-        model = glm::mat4(1.0f);
-        model = glm::translate(model,glm::vec3(3.0f,0.0f,1.0f));
-        model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
-        model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
-        glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-        DullMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
-        uh60Model->RenderModel();
-
-        // Floor this is an obj on a the scene.
-        model = glm::mat4(1.0f);
-        model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
-        glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-
-        texFloor->UseTexture();
-        SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
-        meshList[2]->RenderMesh();
-
-        // and close the program
-        glUseProgram(0);
         // 2 buffers at this moment.
         MainWindow.SwapBuffers();
     }
+    // and close the program
+    shaderList[0]->ClearShader();
+    glUseProgram(0);
     return 0;
 }

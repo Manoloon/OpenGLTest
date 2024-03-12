@@ -5,10 +5,16 @@ class DirectionalLight : public Light{
 
     glm::vec3 direction = {0.0f,-1.0f,0.0f};
 public:
-    // RGB,intensity,directionLocation,diffuseIntensity)
-    explicit DirectionalLight(glm::vec3 RGB, GLfloat intensity,glm::vec3 directionLocation, GLfloat diffuseIntensity)
-    : Light(RGB,intensity,diffuseIntensity){
-        direction = directionLocation;
+    // RGB,intensity,directionLocation,diffuseIntensity,shadow map width, shadow map height)
+    explicit DirectionalLight(  glm::vec3 RGB, 
+                                GLfloat intensity,
+                                glm::vec3 direction, 
+                                GLfloat diffuseIntensity,
+                                GLuint ShadowWidth,
+                                GLuint ShadowHeight)
+    : Light(RGB,intensity,diffuseIntensity,ShadowWidth,ShadowHeight){
+        direction = direction;
+        lightProjection = glm::ortho(-20.0f,20.0f,-20.0f,20.0f,0.1f,100.0f);
     }
     //ambientIntensityLocation, GLuint ambientColourLocation, GLuint directionLocation, GLuint diffuseIntensityLocation
     void Use(GLuint ambientIntensityLocation, GLuint ambientColourLocation, GLuint directionLocation, GLuint diffuseIntensityLocation)
@@ -17,7 +23,11 @@ public:
         glUniform1f(ambientIntensityLocation,ambientIntensity);
 
         glUniform3f(directionLocation,direction.x,direction.y,direction.z);
-        
         glUniform1f(diffuseIntensityLocation,diffuseIntensity);
+    }
+
+    glm::mat4 CalculateLightTransform()
+    {
+        return lightProjection * glm::lookAt(-direction,glm::vec3(0.0f,0.0f,0.0f),glm::vec3(0.0f,1.0f,0.0f));
     }
 };

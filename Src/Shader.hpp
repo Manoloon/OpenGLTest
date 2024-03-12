@@ -6,6 +6,8 @@
 #include <iostream>
 #include <ios>
 #include <GL/glew.h>
+#include <GLM/gtc/type_ptr.hpp>
+
 #include "DirectionalLight.hpp"
 #include "PointLight.hpp"
 #include "SpotLight.hpp"
@@ -18,6 +20,9 @@ class Shader{
     GLuint uniformSpecularIntensity, uniformSpecularShininess = 0;
     GLuint uniformPointLightCount = 0;
     GLuint uniformSpotLightCount = 0;
+    GLuint uniformDirLightTransform = 0;
+    GLuint uniformDirectionalShadowMap = 0;
+    GLuint uniformTexture = 0;
 
     struct 
     {
@@ -158,6 +163,9 @@ class Shader{
             snprintf(locBuff,sizeof(locBuff),"sLights[%d].edge",i);
             FUniformSpotLights[i].uniformEdge = glGetUniformLocation(shaderID,locBuff);
         }
+        uniformTexture = glGetUniformLocation(shaderID,"theTexture");
+        uniformDirLightTransform = glGetUniformLocation(shaderID,"dirLightTransform");
+        uniformDirectionalShadowMap = glGetUniformLocation(shaderID,"directionalShadowMap");
     }
 
     void AddShader(GLuint theProgram,const char* shaderCode,GLenum shaderType)
@@ -200,10 +208,10 @@ class Shader{
         uniformProjection = 0;
     };
 
-    ~Shader()
-        {
-        ClearShader();
-        }
+    // ~Shader()
+    //     {
+    //     ClearShader();
+    //     }
 
     void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation)
     {
@@ -298,6 +306,21 @@ class Shader{
         }
     }
 
+    void SetTexture(GLuint textureUnit)
+    {
+        glUniform1i(uniformTexture,textureUnit);
+    }
+
+    void SetDirectionalShadowMap(GLuint textureUnit)
+    {
+        glUniform1i(uniformDirectionalShadowMap,textureUnit);
+    }
+
+    void SetDirLightTransform(const glm::mat4& lightTransform)
+    {
+        glUniformMatrix4fv(uniformDirLightTransform,1,GL_FALSE,glm::value_ptr(lightTransform));
+    }
+
     void UseShader()
     {
         glUseProgram(shaderID);
@@ -312,6 +335,5 @@ class Shader{
         }
         uniformModel = 0;
         uniformProjection = 0;
-        uniformView = 0;
     }
 };

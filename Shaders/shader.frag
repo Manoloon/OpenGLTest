@@ -4,6 +4,7 @@ in vec4 vCol;
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
+in vec4 dirLightSpacePos;
 
 out vec4 colour; 
 const int MAX_POINT_LIGHTS = 3;
@@ -43,8 +44,10 @@ struct Material
     float specularIntensity;
     float shininess;
 };
-
+// Texture0
 uniform sampler2D theTexture;
+// Texture1
+uniform sampler2D directionalShadowMap;
 uniform Material material;
 
 uniform DirectionalLight dirLight;
@@ -54,7 +57,20 @@ uniform SpotLight sLights[MAX_SPOT_LIGHTS];
 uniform int spotLightCount;
 uniform vec3 eyePosition;
 
-vec4 CalcLightByDirection(Light light, vec3 direction)
+float CalcShadowFactor(DirectionalLight Light)
+{
+    vec3 projCoords = dirLightSpacePos.xyz / dirLightSpacePos.w;
+    projCoords = (projCoords * 0.5) + 0.5;
+
+    // here we calc forwards and backwards of the closest point in that direction
+    // r is the standard letter to get the first value
+    float closestDepth = texture(directionalShadowMap,projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+    return shadow;
+}
+
+vec4 CalcLightByDirection(Light light, vec3 direction,float shadowFactor)
 {
     vec4 ambientCol = vec4(light.colour,1.0f) * light.ambientIntensity;
     
@@ -76,12 +92,13 @@ vec4 CalcLightByDirection(Light light, vec3 direction)
             specularCol = vec4(light.colour * material.specularIntensity * specularFactor,1.0f);
         }
     }
-    return (ambientCol + diffuseCol + specularCol);
+    return (ambientCol + (1.0f - shadowFactor) * (diffuseCol + specularCol));
 }
 
 vec4 CalcDirectionalLight()
-{
-    return CalcLightByDirection(dirLight.base,dirLight.direction);
+{   
+    float shadowFactor = CalcShadowFactor(dirLight);
+    return CalcLightByDirection(dirLight.base,dirLight.direction,shadowFactor);
 }
 
 vec4 CalcPointLight(PointLight pLight)
@@ -89,8 +106,9 @@ vec4 CalcPointLight(PointLight pLight)
     vec3 direction = FragPos - pLight.position;
     float distance = length(direction);
     direction = normalize(direction);
+    float shadow = 0.0f;
 
-    vec4 color = CalcLightByDirection(pLight.base,direction);
+    vec4 color = CalcLightByDirection(pLight.base,direction,shadow);
     // ax^2 + bx + c ; x = distance
     float attenuation = pLight.exponent * distance * distance + 
                         pLight.linear * distance +

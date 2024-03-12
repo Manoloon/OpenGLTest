@@ -8,8 +8,8 @@
 class Window{
 
     GLFWwindow* mainWindow; 
-    GLint winWidth = 800;
-    GLint winHeight = 600;
+    GLint winWidth = 1366;
+    GLint winHeight = 768;
     GLint bufferWidth;
     GLint bufferHeight;
 

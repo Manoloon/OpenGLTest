@@ -13,9 +13,14 @@ class PointLight : public Light
     GLfloat exponent = 0.0f;
 
     public :
-    explicit PointLight(glm::vec3 RGB, GLfloat intensity, GLfloat diffuseIntensity,
-                glm::vec3 pos,GLfloat cons,GLfloat lin, GLfloat exp):
-                Light(RGB,intensity,diffuseIntensity)
+    explicit PointLight(    glm::vec3 RGB, 
+                            GLfloat intensity, 
+                            GLfloat diffuseIntensity,
+                            glm::vec3 pos,
+                            GLfloat cons,
+                            GLfloat lin, 
+                            GLfloat exp):
+                Light(RGB,intensity,diffuseIntensity,1024,1024)
                 {
                     position = pos;
                     constant = cons;
