@@ -8,10 +8,10 @@
 #include <vector>
 #include <memory>
 #include <Assimp/Importer.hpp>
-#include <GLM/glm.hpp>
-#include <GLM/gtc/matrix_transform.hpp>
-#include <GLM/gtc/type_ptr.hpp>
-#include <GLM/mat4x4.hpp>
+//#include <GLM\glm.hpp>
+#include <GLM\gtc\matrix_transform.hpp>
+#include <GLM\gtc\type_ptr.hpp>
+#include <GLM\mat4x4.hpp>
 
 #include "Src/Constants.h"
 
@@ -30,18 +30,19 @@ const float ToRad = 3.14159265f / 180.f;
 
 Window MainWindow;
 std::vector<std::shared_ptr<Mesh>> meshList;
-std::vector<std::shared_ptr<Shader>> shaderList;
-Shader DirectionalShadowShader;
+//std::vector<std::unique_ptr<Shader>> shaderList;
 
+std::unique_ptr<Shader> directionalShadowShader;
+std::unique_ptr<Shader> basicShader;
 //  vertex shader
 static const char* vShader = "Shaders/shader.vert";
-
 //  Fragment shader
 static const char* fShader ="Shaders/shader.frag";
 
 static const char* Texture1Loc = "Textures/brick.png";
 static const char* Texture2Loc = "Textures/dirt.png";
 
+std::unique_ptr<Camera> camera;
 std::shared_ptr<Texture> Text1;
 std::shared_ptr<Texture> Text2;
 std::shared_ptr<Model> uh60Model;
@@ -55,13 +56,15 @@ GLuint uniformProjection = 0;
 GLuint uniformSpecularIntensity=0;
 GLuint uniformSpecularShininess=0;
 GLuint uniformEyePosition =0;
+GLuint uniformDirLightTransform = 0;
 
 unsigned int pointLightCount =0;
 unsigned int spotLightCount = 0;
-std::unique_ptr<Camera> camera;
-    
+
+ 
+GLfloat uh60Angle = 0.0f;   
 // RGB,intensity,directionLocation,diffuseIntensity,shadow map Width,shadow map height)
-std::shared_ptr<DirectionalLight> directionalLight;
+std::unique_ptr<DirectionalLight> directionalLight;
 std::shared_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
  /* SPOT LIGHTS */
 std::shared_ptr<SpotLight> SpotLights[MAX_SPOT_LIGHTS];
@@ -159,10 +162,6 @@ void CreateObjects()
         obj1->CreateMesh(vertices,indices,32,12);
         meshList.emplace_back(obj1);
 
-        std::shared_ptr<Mesh> obj2 = std::make_shared<Mesh>();
-        obj2->CreateMesh(vertices,indices,32,12);
-        meshList.emplace_back(obj2);
-
         std::shared_ptr<Mesh> floorObj = std::make_shared<Mesh>();
         floorObj->CreateMesh(floorVertices,floorIndices,32,6);
         meshList.emplace_back(floorObj);
@@ -170,14 +169,16 @@ void CreateObjects()
 
 void CreateShaders()
     {
-        std::shared_ptr<Shader> Shader1 = std::make_shared<Shader>();
-        Shader1->CreateFromFiles(vShader,fShader);
-        shaderList.emplace_back(Shader1);
+        basicShader = std::make_unique<Shader>();
+        basicShader->CreateFromFiles(vShader,fShader);
+        //shaderList.emplace_back(std::move(BasicShader));
 
-        std::shared_ptr<Shader> DirectionalShadowShader = std::make_shared<Shader>();
-        DirectionalShadowShader->CreateFromFiles("Shaders/dirShadowmap.vert","Shaders/dirShadowmap.frag");
+        directionalShadowShader = std::make_unique<Shader>();
+        directionalShadowShader->CreateFromFiles("Shaders/dirShadowmap.vert","Shaders/dirShadowmap.frag");
     }
 
+// this function is responsible of rendering the entire scene, it setup models, and
+// render each object using its respective material and mesh. 
 void RenderScene()
 {
     // piramid
@@ -188,30 +189,22 @@ void RenderScene()
     ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
     meshList[0]->RenderMesh();
 
+    uh60Angle += 0.1f;
+
+    if(uh60Angle > 360.0)
+    {
+        uh60Angle = 0.0f;
+    }
     //Model uh60
     model = glm::mat4(1.0f);
+    model = glm::rotate(model,-uh60Angle * ToRad,glm::vec3(0.0f,1.0,0.0f));
     model = glm::translate(model,glm::vec3(-8.0f,2.0f,0.0f));
+    model = glm::rotate(model,-20 * ToRad,glm::vec3(0.0f,0.0,1.0f));
     model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
     model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     uh60Model->RenderModel();
-    // //Model uh60
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model,glm::vec3(5.0f,-1.0f,1.5f));
-    // model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
-    // model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
-    // glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-    // SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
-    // uh60Model->RenderModel();
-    // //Model uh60
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model,glm::vec3(-5.0f,-1.0f,2.0f));
-    // model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
-    // model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
-    // glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-    // ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
-    // uh60Model->RenderModel();
     
     // Floor this is an obj on a the scene.
     model = glm::mat4(1.0f);
@@ -219,38 +212,45 @@ void RenderScene()
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     Text2->UseTexture();
     ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
-    meshList[2]->RenderMesh();
+    meshList[1]->RenderMesh();
 }
 
-void DirectionalShadowMapPass(std::shared_ptr<DirectionalLight> light)
+// Render shadows cast by directional light source.
+void DirectionalShadowMapPass(const std::unique_ptr<DirectionalLight>& light)
 {
-    DirectionalShadowShader.UseShader();
+    directionalShadowShader->UseShader();
     //set viewport to same dimension as the framebuffer
     glViewport(0,0,light->GetShadowMap()->GetShadowMapWidth(),
                     light->GetShadowMap()->GetShadowMapHeight());
-
+    
+    // Setup framebuffer for render shadow maps
     light->GetShadowMap()->Write();
     glClear(GL_DEPTH_BUFFER_BIT);
-
-    uniformModel = DirectionalShadowShader.GetModelLocation();
+    
+    // Calculate the transform matrix for the light source and passes it to the shader.
+    uniformModel = directionalShadowShader->GetModelLocation();
     glm::mat4 lightTransform = light->CalculateLightTransform();
-    DirectionalShadowShader.SetDirLightTransform(lightTransform);
+    directionalShadowShader->SetDirLightTransform(&lightTransform);
 
+    directionalShadowShader->Validate();
+    // Then call RenderScene() to render the scene from the perspective of the ligth source.
     RenderScene();
     // detach after used.
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 }
 
+// The main rendering pass of the scene.
+// Setup the viewport, clears color and depth buffer. 
 void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
-    shaderList[0]->UseShader();
-    uniformModel = shaderList[0]->GetModelLocation();
-    uniformProjection = shaderList[0]->GetProjectionLocation();
-    uniformView = shaderList[0]->GetViewLocation();
+    basicShader->UseShader();
+    uniformProjection = basicShader->GetProjectionLocation();
+    uniformModel = basicShader->GetModelLocation();
+    uniformView = basicShader->GetViewLocation();
    
-    uniformEyePosition = shaderList[0]->GetEyePositionLocation();
-    uniformSpecularIntensity = shaderList[0]->GetSpecularIntensityLocation();
-    uniformSpecularShininess = shaderList[0]->GetSpecularShininessLocation();
+    uniformEyePosition = basicShader->GetEyePositionLocation();
+    uniformSpecularIntensity = basicShader->GetSpecularIntensityLocation();
+    uniformSpecularShininess = basicShader->GetSpecularShininessLocation();
 
     // TODO : Create this function on windows class.
     glViewport(0,0,1366,768);
@@ -263,18 +263,19 @@ void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
     glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(viewMatrix));
     glUniform3f(uniformEyePosition,camera->GetPosition().x,camera->GetPosition().y,camera->GetPosition().z);
     
-    shaderList[0]->SetDirectionalLight(directionalLight.get());
-    directionalLight->InitShadowMap();
-    glm::mat4 lightTransform = directionalLight->CalculateLightTransform();
-    shaderList[0]->SetDirLightTransform(lightTransform);
-    directionalLight->GetShadowMap()->Read(GL_TEXTURE1);
-    shaderList[0]->SetTexture(0);
-    shaderList[0]->SetDirectionalShadowMap(1);
+    basicShader->SetDirectionalLight(directionalLight);
+    basicShader->SetPointLights(PointLights->get(),pointLightCount);
+    basicShader->SetSpotLights(SpotLights->get(),spotLightCount);
 
-    shaderList[0]->SetPointLights(PointLights->get(),pointLightCount);
-    shaderList[0]->SetSpotLights(SpotLights->get(),spotLightCount);
- 
     SpotLights[0]->SetTransform(camera->GetPosition(),camera->GetDirection()); 
+
+    glm::mat4 lightTransform = directionalLight->CalculateLightTransform();
+    basicShader->SetDirLightTransform(&lightTransform);
+    
+    directionalLight->GetShadowMap()->Read(GL_TEXTURE1);
+    basicShader->SetTexture(0);
+    basicShader->SetDirectionalShadowMap(1);
+    basicShader->Validate();
     RenderScene();
 }
 
@@ -286,8 +287,7 @@ int main()
     // DRAWING
     CreateObjects();
     CreateShaders();
-
-    GLfloat FOV = 45.0f;
+    GLfloat FOV = glm::radians(45.0f);
     GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
     camera = std::make_unique<Camera>();
 
@@ -303,11 +303,12 @@ int main()
     ShinyMaterial = std::make_unique<Material>(1.0f,32);
     DullMaterial = std::make_unique<Material>(0.3f,4);
      // RGB,intensity,direction,diffuseIntensity,shadow map width, shadow map height)
-    directionalLight = std::make_shared<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
+    directionalLight = std::make_unique<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
                                              1.0f,
                                              glm::vec3(0.0f,-15.0f,10.0f),0.3f,
                                              1024,1024);
-// RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
+    directionalLight->InitShadowMap();
+    // RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
     PointLights[0] = std::make_shared<PointLight>(glm::vec3(1.0f,0.0f,0.0f),
                                                  1.0f,0.7f,
                                                  glm::vec3(0.0f,2.0f,0.0f),
@@ -351,7 +352,8 @@ int main()
         MainWindow.SwapBuffers();
     }
     // and close the program
-    shaderList[0]->ClearShader();
+    basicShader->ClearShader();
+    directionalShadowShader->ClearShader();
     glUseProgram(0);
     return 0;
 }

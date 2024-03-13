@@ -39,8 +39,8 @@ class ShadowMap
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // NEAREST
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
         // here we can use GL_DRAWFRAMEBUFFER
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER,FBO);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,shadowMap,0);
+        glBindFramebuffer(GL_FRAMEBUFFER,FBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,shadowMap,0);
 
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
@@ -51,7 +51,7 @@ class ShadowMap
             printf("Error in ShadowMap::Init: Framebuffer incomplete (status: 0x%x)\n", status);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER,0);
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
         return true;
     }
 

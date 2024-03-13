@@ -4,9 +4,10 @@ in vec4 vCol;
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
-in vec4 dirLightSpacePos;
+in vec4 DirLightSpacePos;
 
-out vec4 colour; 
+out vec4 colour;
+
 const int MAX_POINT_LIGHTS = 3;
 const int MAX_SPOT_LIGHTS = 3;
 
@@ -44,11 +45,6 @@ struct Material
     float specularIntensity;
     float shininess;
 };
-// Texture0
-uniform sampler2D theTexture;
-// Texture1
-uniform sampler2D directionalShadowMap;
-uniform Material material;
 
 uniform DirectionalLight dirLight;
 uniform PointLight pLights[MAX_POINT_LIGHTS];
@@ -57,16 +53,46 @@ uniform SpotLight sLights[MAX_SPOT_LIGHTS];
 uniform int spotLightCount;
 uniform vec3 eyePosition;
 
-float CalcShadowFactor(DirectionalLight Light)
+// Texture0
+uniform sampler2D theTexture;
+// Texture1
+uniform sampler2D directionalShadowMap;
+uniform Material material;
+
+float CalcShadowFactor(DirectionalLight light)
 {
-    vec3 projCoords = dirLightSpacePos.xyz / dirLightSpacePos.w;
+    vec3 projCoords = DirLightSpacePos.xyz / DirLightSpacePos.w;
     projCoords = (projCoords * 0.5) + 0.5;
 
     // here we calc forwards and backwards of the closest point in that direction
     // r is the standard letter to get the first value
-    float closestDepth = texture(directionalShadowMap,projCoords.xy).r;
+    //float closestDepth = texture(directionalShadowMap,projCoords.xy).r;
     float currentDepth = projCoords.z;
-    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+   // float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+
+    // solve acne 
+
+    vec3 normal = normalize(Normal);
+    vec3 lightDir = normalize(light.direction);
+    float bias = max(0.05 * (1.0 - dot(normal,lightDir)), 0.0005);
+    float shadow = 0.0;
+    // PCF
+    vec2 texelSize = 1.0 / textureSize(directionalShadowMap,0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(directionalShadowMap,projCoords.xy + vec2(x,y) * texelSize).r;
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+    ////////
+    if (projCoords.z > 1.0)
+    {
+        shadow = 0.0;
+    }
+    ///
     return shadow;
 }
 

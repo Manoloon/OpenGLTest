@@ -8,7 +8,7 @@ out vec4 vCol;
 out vec2 TexCoord;
 out vec3 Normal;
 out vec3 FragPos;
-out vec4 dirLightSpacePos;
+out vec4 DirLightSpacePos;
 
 uniform mat4 model;
 uniform mat4 projection;
@@ -18,7 +18,8 @@ uniform mat4 dirLightTransform;
 void main()              
 {                  
     gl_Position = projection * view * model * vec4(pos, 1.0);
-    dirLightSpacePos = dirLightTransform * model * vec4(pos,1.0);
+    DirLightSpacePos = dirLightTransform * model * vec4(pos,1.0);
+    
     vCol = vec4(clamp(pos,0.0f,1.0f),1.0f);    
 
     TexCoord = tex;

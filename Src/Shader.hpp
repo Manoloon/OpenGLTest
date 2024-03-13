@@ -106,6 +106,10 @@ class Shader{
         uniformPointLightCount = glGetUniformLocation(shaderID,"pointLightCount");
         uniformSpotLightCount = glGetUniformLocation(shaderID,"spotLightCount");
 
+        uniformTexture = glGetUniformLocation(shaderID,"theTexture");
+        uniformDirLightTransform = glGetUniformLocation(shaderID,"dirLightTransform");
+        uniformDirectionalShadowMap = glGetUniformLocation(shaderID,"directionalShadowMap");
+
         for(size_t i = 0; i < MAX_POINT_LIGHTS; i++)
         {
             char locBuff[100] = {'\0'};
@@ -163,9 +167,6 @@ class Shader{
             snprintf(locBuff,sizeof(locBuff),"sLights[%d].edge",i);
             FUniformSpotLights[i].uniformEdge = glGetUniformLocation(shaderID,locBuff);
         }
-        uniformTexture = glGetUniformLocation(shaderID,"theTexture");
-        uniformDirLightTransform = glGetUniformLocation(shaderID,"dirLightTransform");
-        uniformDirectionalShadowMap = glGetUniformLocation(shaderID,"directionalShadowMap");
     }
 
     void AddShader(GLuint theProgram,const char* shaderCode,GLenum shaderType)
@@ -199,141 +200,156 @@ class Shader{
     }
 
     public:
-    Shader()
-    {
-        //TODO : Hace falta un constructor?
-        shaderID = 0;
-        uniformModel = 0;
-        uniformView = 0;
-        uniformProjection = 0;
-    };
-
-    // ~Shader()
-    //     {
-    //     ClearShader();
-    //     }
-
-    void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation)
-    {
-        std::string vertexString = ReadFile(vertexLocation);
-        std::string fragmentString = ReadFile(fragmentLocation);
-        const char* vertexCode = vertexString.c_str();
-        const char* fragmentCode = fragmentString.c_str();
-
-        CompileShader(vertexCode,fragmentCode);
-    }
-
-    void CreateFromString(const char* vertexCode, const char* fragmentCode)
-    {
-        CompileShader(vertexCode,fragmentCode);
-    }
-
-    std::string ReadFile(const char* fileLocation)
-    {
-        std::string content;
-        std::ifstream fileStream(fileLocation,std::ios::in);
-        if(!fileStream){
-            printf("Failed To read %s! file doesnt exists.",fileLocation);
-        }
-        std::string line = "";
-        while (!fileStream.eof()){
-            std::getline(fileStream,line);
-            content.append(line + "\n");
-        }
-        fileStream.close();
-        return content;  
-    }
-
-    GLuint GetProjectionLocation() const { return uniformProjection; }
-
-    GLuint GetViewLocation() const{return uniformView;}
-
-    GLuint GetModelLocation() const { return uniformModel; }
-
-    GLuint GetAmbientColourLocation() const {return FUniformDirLight.uniformColour;}
-
-    GLuint GetAmbientIntensityLocation() const {return FUniformDirLight.uniformAmbientIntensity;}
-
-    GLuint GetDiffuseDirectionLocation() const {return FUniformDirLight.uniformDirection;}
-
-    GLuint GetDiffuseIntensityLocation() const {return FUniformDirLight.uniformDiffuseIntensity;}
-
-    GLuint GetSpecularIntensityLocation() const {return uniformSpecularIntensity;}
-
-    GLuint GetSpecularShininessLocation() const {return uniformSpecularShininess; }
-
-    GLuint GetEyePositionLocation() const {return uniformEyePosition;}
-
-    void SetDirectionalLight(DirectionalLight* dLight)
-    {
-        dLight->Use(FUniformDirLight.uniformAmbientIntensity,
-                    FUniformDirLight.uniformColour,
-                    FUniformDirLight.uniformDirection,
-                    FUniformDirLight.uniformDiffuseIntensity);
-    }
-
-    void SetPointLights(PointLight* pLight,unsigned int lightCount)
-    {
-        if(lightCount > MAX_POINT_LIGHTS) lightCount = MAX_POINT_LIGHTS;
-        glUniform1i(uniformPointLightCount,lightCount);
-        for(size_t i =0 ; i < lightCount;i++){
-            pLight[i].Use(FUniformPointLights[i].uniformAmbientIntensity,
-                            FUniformPointLights[i].uniformColour,
-                            FUniformPointLights[i].uniformPosition,
-                            FUniformPointLights[i].uniformDiffuseIntensity,
-                            FUniformPointLights[i].uniformConstant,
-                            FUniformPointLights[i].uniformLinear,
-                            FUniformPointLights[i].uniformExponent);
-        }
-    }
-
-    void SetSpotLights(SpotLight* sLight,unsigned int lightCount)
-    {
-        if(lightCount > MAX_SPOT_LIGHTS) lightCount = MAX_SPOT_LIGHTS;
-        glUniform1i(uniformSpotLightCount,lightCount);
-        for(size_t i =0 ; i < lightCount;i++){
-            //ambientIntensityLocation,ambientColourLocation,positionLocation,directionLocation,edgeLocation,diffuseIntensityLocation
-            //,constantLocation, linearLocation, GLuint exponentLocation
-            sLight[i].Use(FUniformSpotLights[i].uniformAmbientIntensity,
-                            FUniformSpotLights[i].uniformColour,
-                            FUniformSpotLights[i].uniformPosition,
-                            FUniformSpotLights[i].uniformDirection,
-                            FUniformSpotLights[i].uniformEdge,
-                            FUniformSpotLights[i].uniformDiffuseIntensity,
-                            FUniformSpotLights[i].uniformConstant,
-                            FUniformSpotLights[i].uniformLinear,
-                            FUniformSpotLights[i].uniformExponent);
-        }
-    }
-
-    void SetTexture(GLuint textureUnit)
-    {
-        glUniform1i(uniformTexture,textureUnit);
-    }
-
-    void SetDirectionalShadowMap(GLuint textureUnit)
-    {
-        glUniform1i(uniformDirectionalShadowMap,textureUnit);
-    }
-
-    void SetDirLightTransform(const glm::mat4& lightTransform)
-    {
-        glUniformMatrix4fv(uniformDirLightTransform,1,GL_FALSE,glm::value_ptr(lightTransform));
-    }
-
-    void UseShader()
-    {
-        glUseProgram(shaderID);
-    }
-    
-    void ClearShader()
-    {
-        if(shaderID != 0)
+        Shader()
         {
-                glDeleteProgram(shaderID);
-                shaderID = 0;
+            //TODO : Hace falta un constructor?
+            shaderID = 0;
+            uniformModel = 0;
+            uniformView = 0;
+            uniformProjection = 0;
+        };
+
+        // ~Shader()
+        //     {
+        //     ClearShader();
+        //     }
+
+        void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation)
+        {
+            std::string vertexString = ReadFile(vertexLocation);
+            std::string fragmentString = ReadFile(fragmentLocation);
+            const char* vertexCode = vertexString.c_str();
+            const char* fragmentCode = fragmentString.c_str();
+
+            CompileShader(vertexCode,fragmentCode);
         }
-        uniformModel = 0;
-        uniformProjection = 0;
-    }
+
+        void CreateFromString(const char* vertexCode, const char* fragmentCode)
+        {
+            CompileShader(vertexCode,fragmentCode);
+        }
+
+        std::string ReadFile(const char* fileLocation)
+        {
+            std::string content;
+            std::ifstream fileStream(fileLocation,std::ios::in);
+            if(!fileStream){
+                printf("Failed To read %s! file doesnt exists.",fileLocation);
+            }
+            std::string line = "";
+            while (!fileStream.eof()){
+                std::getline(fileStream,line);
+                content.append(line + "\n");
+            }
+            fileStream.close();
+            return content;  
+        }
+
+        GLuint GetProjectionLocation() const { return uniformProjection; }
+
+        GLuint GetViewLocation() const{return uniformView;}
+
+        GLuint GetModelLocation() const { return uniformModel; }
+
+        GLuint GetAmbientColourLocation() const {return FUniformDirLight.uniformColour;}
+
+        GLuint GetAmbientIntensityLocation() const {return FUniformDirLight.uniformAmbientIntensity;}
+
+        GLuint GetDiffuseDirectionLocation() const {return FUniformDirLight.uniformDirection;}
+
+        GLuint GetDiffuseIntensityLocation() const {return FUniformDirLight.uniformDiffuseIntensity;}
+
+        GLuint GetSpecularIntensityLocation() const {return uniformSpecularIntensity;}
+
+        GLuint GetSpecularShininessLocation() const {return uniformSpecularShininess; }
+
+        GLuint GetEyePositionLocation() const {return uniformEyePosition;}
+
+        void SetDirectionalLight(const std::unique_ptr<DirectionalLight>& dLight)
+        {
+            dLight->Use(FUniformDirLight.uniformAmbientIntensity,
+                        FUniformDirLight.uniformColour,
+                        FUniformDirLight.uniformDirection,
+                        FUniformDirLight.uniformDiffuseIntensity);
+        }
+
+        void SetPointLights(PointLight* pLight,unsigned int lightCount)
+        {
+            if(lightCount > MAX_POINT_LIGHTS) lightCount = MAX_POINT_LIGHTS;
+            glUniform1i(uniformPointLightCount,lightCount);
+            for(size_t i =0 ; i < lightCount;i++){
+                pLight[i].Use(FUniformPointLights[i].uniformAmbientIntensity,
+                                FUniformPointLights[i].uniformColour,
+                                FUniformPointLights[i].uniformPosition,
+                                FUniformPointLights[i].uniformDiffuseIntensity,
+                                FUniformPointLights[i].uniformConstant,
+                                FUniformPointLights[i].uniformLinear,
+                                FUniformPointLights[i].uniformExponent);
+            }
+        }
+
+        void SetSpotLights(SpotLight* sLight,unsigned int lightCount)
+        {
+            if(lightCount > MAX_SPOT_LIGHTS) lightCount = MAX_SPOT_LIGHTS;
+            glUniform1i(uniformSpotLightCount,lightCount);
+            for(size_t i =0 ; i < lightCount;i++){
+                //ambientIntensityLocation,ambientColourLocation,positionLocation,directionLocation,edgeLocation,diffuseIntensityLocation
+                //,constantLocation, linearLocation, GLuint exponentLocation
+                sLight[i].Use(FUniformSpotLights[i].uniformAmbientIntensity,
+                                FUniformSpotLights[i].uniformColour,
+                                FUniformSpotLights[i].uniformPosition,
+                                FUniformSpotLights[i].uniformDirection,
+                                FUniformSpotLights[i].uniformEdge,
+                                FUniformSpotLights[i].uniformDiffuseIntensity,
+                                FUniformSpotLights[i].uniformConstant,
+                                FUniformSpotLights[i].uniformLinear,
+                                FUniformSpotLights[i].uniformExponent);
+            }
+        }
+
+        void SetTexture(GLuint textureUnit)
+        {
+            glUniform1i(uniformTexture,textureUnit);
+        }
+
+        void SetDirectionalShadowMap(GLuint textureUnit)
+        {
+            glUniform1i(uniformDirectionalShadowMap,textureUnit);
+        }
+
+        void SetDirLightTransform(glm::mat4* lightTransform)
+        {
+            glUniformMatrix4fv(uniformDirLightTransform,1,GL_FALSE,glm::value_ptr(*lightTransform));
+        }
+
+        void UseShader()
+        {
+            glUseProgram(shaderID);
+        }
+        
+        void ClearShader()
+        {
+            if(shaderID != 0)
+            {
+                    glDeleteProgram(shaderID);
+                    shaderID = 0;
+            }
+            uniformModel = 0;
+            uniformProjection = 0;
+        }
+
+        void Validate()
+        {
+            GLint result = 0;
+            GLchar eLog[1024] = {0};
+
+            glValidateProgram(shaderID);
+            glGetProgramiv(shaderID,GL_VALIDATE_STATUS, &result);
+            if(!result)
+            {
+                glGetProgramInfoLog(shaderID,sizeof(eLog),NULL,eLog);
+                printf("ERROR Validating : %s'\n",eLog);
+                return;
+            }
+        }
 };

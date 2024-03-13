@@ -14,7 +14,7 @@ public:
                                 GLuint ShadowHeight)
     : Light(RGB,intensity,diffuseIntensity,ShadowWidth,ShadowHeight){
         direction = direction;
-        lightProjection = glm::ortho(-20.0f,20.0f,-20.0f,20.0f,0.1f,100.0f);
+        lightProjection = glm::ortho(-5.0f,5.0f,-5.0f,5.0f,0.1f,5.0f);
     }
     //ambientIntensityLocation, GLuint ambientColourLocation, GLuint directionLocation, GLuint diffuseIntensityLocation
     void Use(GLuint ambientIntensityLocation, GLuint ambientColourLocation, GLuint directionLocation, GLuint diffuseIntensityLocation)
