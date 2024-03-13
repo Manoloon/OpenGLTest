@@ -135,10 +135,10 @@ void CreateObjects()
         GLfloat vertices[]
         {
             //x,     y,    z,      U,       V       Nx      Ny      Nz
-            -1.f,   -1.f,  -0.6f,  0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
-            0.f,    -1.f,  1.f,    0.5f,   0.0f,   0.0f,   0.0f,   0.0f,
-            1.f,    -1.f,  -0.6f,  1.0f,   0.0f,   0.0f,   0.0f,   0.0f,
-            0.f,    1.f,   0.f,    0.5f,   1.0f,   0.0f,   0.0f,   0.0f
+            -4.f,   -4.f,  -4.0f,  0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            0.f,    -4.f,  4.f,    0.5f,   0.0f,   0.0f,   0.0f,   0.0f,
+            4.f,    -4.f,  -4.0f,  2.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            0.f,    4.f,   0.f,    0.5f,   2.0f,   0.0f,   0.0f,   0.0f
         };
 
          unsigned int floorIndices[]
@@ -151,9 +151,9 @@ void CreateObjects()
         {
             //x,     y,    z,      U,       V       Nx      Ny      Nz
             -20.f,   0.f,  -20.0f,   0.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
-             20.f,    0.f,  -20.f,   20.0f,  0.0f,   0.0f,   -1.0f,   0.0f,
-            -20.f,   0.f,  20.0f,    0.0f,   20.0f,   0.0f,   -1.0f,   0.0f,
-             20.f,    0.f,  20.f,    20.0f,  20.0f,   0.0f,   -1.0f,   0.0f
+             20.f,    0.f,  -20.f,   5.0f,  0.0f,   0.0f,   -1.0f,   0.0f,
+            -20.f,   0.f,  20.0f,    0.0f,   5.0f,   0.0f,   -1.0f,   0.0f,
+             20.f,    0.f,  20.f,    5.0f,  5.0f,   0.0f,   -1.0f,   0.0f
         };
 
         CalculateAvgNormals(indices,12,vertices,32,8,5);
@@ -183,7 +183,7 @@ void RenderScene()
 {
     // piramid
     glm::mat4 model(1.0f);
-    model = glm::translate(model,glm::vec3(0.0f,0.0f,-4.0f));
+    model = glm::translate(model,glm::vec3(0.0f,0.0f,0.0f));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     Text1->UseTexture();
     ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
@@ -206,12 +206,21 @@ void RenderScene()
     SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     uh60Model->RenderModel();
     
+     //Model uh60
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(-8.0f,-1.2f,0.0f));
+    model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    uh60Model->RenderModel();
+
     // Floor this is an obj on a the scene.
     model = glm::mat4(1.0f);
     model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     Text2->UseTexture();
-    ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    DullMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
     meshList[1]->RenderMesh();
 }
 
@@ -303,23 +312,23 @@ int main()
     ShinyMaterial = std::make_unique<Material>(1.0f,32);
     DullMaterial = std::make_unique<Material>(0.3f,4);
      // RGB,intensity,direction,diffuseIntensity,shadow map width, shadow map height)
-    directionalLight = std::make_unique<DirectionalLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                             1.0f,
-                                             glm::vec3(0.0f,-15.0f,10.0f),0.3f,
+    directionalLight = std::make_unique<DirectionalLight>(glm::vec3(0.7f,0.6f,0.6f),
+                                             0.7f,
+                                             glm::vec3(0.0f,-15.0f,6.0f),0.3f,
                                              1024,1024);
     directionalLight->InitShadowMap();
     // RGB,intensity,diffuseIntensity,position,constant,linear,exponent)
-    PointLights[0] = std::make_shared<PointLight>(glm::vec3(1.0f,0.0f,0.0f),
-                                                 1.0f,0.7f,
-                                                 glm::vec3(0.0f,2.0f,0.0f),
-                                                 0.3f,0.2f,0.1f);
-   // pointLightCount++;
-    PointLights[1] = std::make_shared<PointLight>(glm::vec3(1.0f,1.0f,0.0f),
-                                                 0.6f,0.7f,
-                                                 glm::vec3(0.0f,2.0f,0.0f),
-                                                    0.3f,0.2f,0.1f);
-   // pointLightCount++;
-    //RGB, intensity, diffuseIntensity, pos, dir, edge, cons, lin,  exp
+//     PointLights[0] = std::make_shared<PointLight>(glm::vec3(1.0f,0.0f,0.0f),
+//                                                  1.0f,0.7f,
+//                                                  glm::vec3(0.0f,2.0f,0.0f),
+//                                                  0.3f,0.2f,0.1f);
+//    // pointLightCount++;
+//     PointLights[1] = std::make_shared<PointLight>(glm::vec3(1.0f,1.0f,0.0f),
+//                                                  0.6f,0.7f,
+//                                                  glm::vec3(0.0f,2.0f,0.0f),
+//                                                     0.3f,0.2f,0.1f);
+//     //pointLightCount++;
+//     //RGB, intensity, diffuseIntensity, pos, dir, edge, cons, lin,  exp
     SpotLights[0] = std::make_shared<SpotLight>(glm::vec3(1.0f,1.0f,1.0f),
                                                 1.0f,0.2f,
                                                 glm::vec3(0.0f,-1.5f,0.0f),
