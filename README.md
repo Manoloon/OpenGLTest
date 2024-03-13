@@ -72,4 +72,28 @@ Shadow Acne :
 Peter Panning : Shadow shift away from the object due to the bias applied being to large.
 PCF : Percentage-closer filtering .
 
+
+# omni shadow maps
+
+Cubemap !
+cubemap counts 6 textures but can be ref as 1 texture in GLSL
+bind = GL_TEXTURE_CUBE_MAP
+teximage2D = GL_TEXTURE_CUBE_MAP_POSITIVE_X, NEGATIVE_X, POSITIVE_Y, NEGATIVE_Y
+POSITIVE_Z, NEGATIVE_Z ( 6 in total)
+
+buscar imagen de pointlight shadow , y cubemap 
+
+dont use UVs 
+can access point on cube map with direction vector pointing to Texel on cube map from center of the cube.
+
+use perspective projection.
+aspect = width of one side of cube / height. Should be always 1 .
+
+Geometry Shader
+Prjection and view will be applied in the Geo Shader.
+happens btw vertex and fragment shaders.
+handle primitives (points,lines,triangles)
+Can create new primitives
+samplerCube is where Cubemap should be bind with.
+PCF is the same but with a vec3 now, hence more intensive.
 ![Alt Text](https://github.com/Manoloon/OpenGLTest/blob/main/opengl.gif)

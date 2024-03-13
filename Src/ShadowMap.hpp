@@ -27,17 +27,14 @@ class ShadowMap
         glBindTexture(GL_TEXTURE_2D,shadowMap);
 
         glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT,Width,Height,0,GL_DEPTH_COMPONENT,GL_FLOAT,nullptr);
-
-    //    glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); //MIRRORED, CLAMP_TO_EDGE, CLAMP_TO_BORDER
-    //    glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-
-    //    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_BORDER); // NEAREST
-    //    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT); //MIRRORED, CLAMP_TO_EDGE, CLAMP_TO_BORDER
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // NEAREST
+        
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST); // NEAREST
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_BORDER); //MIRRORED, CLAMP_TO_EDGE, CLAMP_TO_BORDER
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_BORDER);
+
+        float clampColor[] = {1.0f,1.0f,1.0f,1.0f};
+        glTexParameterfv(GL_TEXTURE_2D,GL_TEXTURE_BORDER_COLOR,clampColor);
         // here we can use GL_DRAWFRAMEBUFFER
         glBindFramebuffer(GL_FRAMEBUFFER,FBO);
         glFramebufferTexture2D(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,shadowMap,0);
@@ -45,7 +42,7 @@ class ShadowMap
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
 
-        GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if(status != GL_FRAMEBUFFER_COMPLETE)
         {
             printf("Error in ShadowMap::Init: Framebuffer incomplete (status: 0x%x)\n", status);
