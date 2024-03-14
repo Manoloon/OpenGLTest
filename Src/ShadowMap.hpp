@@ -47,6 +47,7 @@ class ShadowMap
         {
             printf("Error in ShadowMap::Init: Framebuffer incomplete (status: 0x%x)\n", status);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            return false;
         }
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         return true;

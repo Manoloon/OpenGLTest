@@ -9,8 +9,13 @@ class SpotLight : public PointLight
     
     public :
     explicit SpotLight(glm::vec3 RGB, GLfloat intensity, GLfloat diffuseIntensity,
-                glm::vec3 pos,glm::vec3 dir,GLfloat edgeAngle,GLfloat cons,GLfloat lin, GLfloat exp):
-                PointLight(RGB,intensity,diffuseIntensity,pos,cons,lin,exp)
+                        glm::vec3 pos,glm::vec3 dir,GLfloat edgeAngle,
+                        GLfloat cons,GLfloat lin, GLfloat exp,                            
+                        GLuint shadowWidth,
+                        GLuint shadowHeight,
+                        GLfloat nearP,
+                        GLfloat farP):
+                PointLight(RGB,intensity,diffuseIntensity,pos,cons,lin,exp,shadowWidth,shadowHeight,nearP,farP)
                 {
                     direction = glm::normalize(dir);
                     edge = cosf(glm::radians(edgeAngle));

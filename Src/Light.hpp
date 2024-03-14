@@ -16,7 +16,7 @@ protected:
     GLuint shadowHeight = 0;
     // for point light, would be an array of this.
     glm::mat4 lightProjection = glm::mat4(1.0f);
-    std::unique_ptr<ShadowMap> shadowMap;
+    
 
 public:
     explicit Light( glm::vec3 RGB, 
@@ -26,18 +26,8 @@ public:
                     GLuint shadowHeight):colour(RGB),ambientIntensity(intensity),
                         diffuseIntensity(diffuseIntensity),
                         shadowWidth(shadowWidth),
-                        shadowHeight(shadowHeight),
-                        shadowMap{std::make_unique<ShadowMap>()}
+                        shadowHeight(shadowHeight)                        
                        {}
 
-    void InitShadowMap()
-    {
-        if (shadowWidth == 0 || shadowHeight == 0)
-        {
-            throw std::invalid_argument("Shadow map has no height or width!!!");
-        }
-        shadowMap->Init(shadowWidth,shadowHeight);
-    }
-
-    const std::unique_ptr<ShadowMap>& GetShadowMap() const {return shadowMap;}
+    virtual void InitShadowMap()=0;
 };

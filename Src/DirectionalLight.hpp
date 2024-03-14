@@ -4,15 +4,16 @@
 class DirectionalLight : public Light{
 
    glm::vec3 direction = {0.0f,-1.0f,0.0f};
+   std::unique_ptr<ShadowMap> shadowMap;
 public:
     // RGB,intensity,directionLocation,diffuseIntensity,shadow map width, shadow map height)
     explicit DirectionalLight(  glm::vec3 RGB, 
                                 GLfloat intensity,
                                 glm::vec3 dir, 
                                 GLfloat diffuseIntensity,
-                                GLuint ShadowWidth,
-                                GLuint ShadowHeight)
-    : Light(RGB,intensity,diffuseIntensity,ShadowWidth,ShadowHeight),direction(dir)
+                                GLuint shadowWidth,
+                                GLuint shadowHeight)
+    : Light(RGB,intensity,diffuseIntensity,shadowWidth,shadowHeight),direction(dir),shadowMap{std::make_unique<ShadowMap>()}
     {
         lightProjection = glm::ortho(-15.0f,15.0f,-15.0f,15.0f,0.1f,75.0f);
     }
@@ -30,4 +31,14 @@ public:
     {
         return lightProjection * glm::lookAt(-direction,glm::vec3(0.0f,0.0f,0.0f),glm::vec3(0.0f,1.0f,0.0f));
     }
+
+    virtual void InitShadowMap()
+    {
+        if (shadowWidth == 0 || shadowHeight == 0)
+        {
+            throw std::invalid_argument("Shadow map has no height or width!!!");
+        }
+        shadowMap->Init(shadowWidth,shadowHeight);
+    }
+    const std::unique_ptr<ShadowMap>& GetShadowMap() const {return shadowMap;}
 };
