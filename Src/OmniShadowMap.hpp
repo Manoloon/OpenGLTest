@@ -20,12 +20,12 @@ class OmniShadowMap : public ShadowMap
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, sWidth, sHeight, 0, 
                                 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
         }
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // NEAREST
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE); //MIRRORED, CLAMP_TO_EDGE, CLAMP_TO_BORDER
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-        // this value is for Z 
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_R,GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_R,GL_CLAMP_TO_EDGE);
 
         glBindFramebuffer(GL_FRAMEBUFFER, FBO);
         glFramebufferTexture(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,shadowMap,0);
@@ -48,7 +48,7 @@ class OmniShadowMap : public ShadowMap
     virtual void Write()
     {
         //GL_DRAW_FRAMEBUFFER
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER,FBO);
+        glBindFramebuffer(GL_FRAMEBUFFER,FBO);
     }
 
     virtual void Read(GLenum textUnit)

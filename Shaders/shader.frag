@@ -11,6 +11,12 @@ out vec4 colour;
 const int MAX_POINT_LIGHTS = 3;
 const int MAX_SPOT_LIGHTS = 3;
 
+struct OmniShadowMap
+{
+    samplerCube shadowMap;
+    float farPlane;
+};
+
 struct Light
 {
     vec3 colour;
@@ -53,11 +59,57 @@ uniform SpotLight sLights[MAX_SPOT_LIGHTS];
 uniform int spotLightCount;
 uniform vec3 eyePosition;
 
+// this is for PCF (avoid a nested for loop)
+vec3 gridSamplingDisk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
 // Texture0
 uniform sampler2D theTexture;
 // Texture1
 uniform sampler2D directionalShadowMap;
+uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
 uniform Material material;
+
+float CalcOmniShadowFactor(PointLight light, int shadowIndex)
+{
+    vec3 fragToLight = FragPos - light.position;
+    float closest = texture(omniShadowMaps[shadowIndex].shadowMap, fragToLight).r;
+
+    closest *= omniShadowMaps[shadowIndex].farPlane;
+    float current = length(fragToLight);
+    float bias = 0.05;
+    float shadow = current - bias > closest ? 1.0 : 0.0;
+    return shadow;
+}
+
+float CalcOmniShadowFactorWithPCF(PointLight light, int shadowIndex)
+{
+    vec3 fragToLight = FragPos - light.position;
+    float current = length(fragToLight);
+
+    float shadow = 0.0;
+    float bias = 0.05;
+    int samples = 20;
+    float viewDist = length(eyePosition - FragPos);
+    float diskRadius = (1.0 + viewDist / (omniShadowMaps[shadowIndex].farPlane)) / 25.0;
+    for(int i = 0; i < samples; i++)
+    {
+        float closest = texture(omniShadowMaps[shadowIndex].shadowMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closest *= omniShadowMaps[shadowIndex].farPlane;
+        if(current - bias > closest)
+        {
+            shadow += 1.0;
+        }
+    }
+    shadow /= float(samples);
+    return shadow;
+}
 
 float CalcShadowFactor(DirectionalLight light)
 {
@@ -127,14 +179,15 @@ vec4 CalcDirectionalLight()
     return CalcLightByDirection(dirLight.base,dirLight.direction,shadowFactor);
 }
 
-vec4 CalcPointLight(PointLight pLight)
+vec4 CalcPointLight(PointLight pLight, int shadowIndex)
 {
     vec3 direction = FragPos - pLight.position;
     float distance = length(direction);
     direction = normalize(direction);
-    float shadow = 0.0f;
 
-    vec4 color = CalcLightByDirection(pLight.base,direction,shadow);
+    float shadowFactor = CalcOmniShadowFactor(pLight,shadowIndex);
+
+    vec4 color = CalcLightByDirection(pLight.base,direction,shadowFactor);
     // ax^2 + bx + c ; x = distance
     float attenuation = pLight.exponent * distance * distance + 
                         pLight.linear * distance +
@@ -147,19 +200,19 @@ vec4 CalcTotalPointLights()
    vec4 totalColor= vec4(0,0,0,0);
    for(int i = 0; i < pointLightCount; i++)
    {
-    totalColor += CalcPointLight(pLights[i]);
+    totalColor += CalcPointLight(pLights[i], i);
    }
    return totalColor;
 }
 
-vec4 CalcSpotLight(SpotLight sLight)
+vec4 CalcSpotLight(SpotLight sLight, int shadowIndex)
 {
     vec3 rayDir = normalize(FragPos - sLight.base.position);
     float spotLightFactor = dot(rayDir, sLight.direction);
 
     if(spotLightFactor > sLight.edge)
     {
-        vec4 colour = CalcPointLight(sLight.base);
+        vec4 colour = CalcPointLight(sLight.base,shadowIndex);
         // the ratio between the two scales of the cone = max -(max - spotLightFactor) * (max/(max - sLight.edge))
         return colour * (1.0f - (1.0f - spotLightFactor) * (1.0f/(1.0f - sLight.edge)));
     }
@@ -171,7 +224,7 @@ vec4 CalcTotalSpotLights()
     vec4 totalColor= vec4(0,0,0,0);
     for(int i = 0; i < spotLightCount; i++)
     {
-        totalColor += CalcSpotLight(sLights[i]);
+        totalColor += CalcSpotLight(sLights[i],i + pointLightCount);
     }
     return totalColor;
 }

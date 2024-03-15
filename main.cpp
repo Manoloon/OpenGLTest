@@ -68,8 +68,8 @@ unsigned int spotLightCount = 0;
 GLfloat uh60Angle = 0.0f;   
 // RGB,intensity,directionLocation,diffuseIntensity,shadow map Width,shadow map height)
 std::unique_ptr<DirectionalLight> directionalLight;
-std::unique_ptr<PointLight> PointLights[MAX_POINT_LIGHTS];
-std::unique_ptr<SpotLight> SpotLights[MAX_SPOT_LIGHTS];
+std::array<std::unique_ptr<PointLight>,MAX_POINT_LIGHTS> PointLights;
+std::array<std::unique_ptr<SpotLight>,MAX_SPOT_LIGHTS> SpotLights;
 
 void CalculateAvgNormals(unsigned int* indices,unsigned int indiceCount, GLfloat* vertices, unsigned int verticesCount, 
                         unsigned int vlength, unsigned int normalOffset)
@@ -225,7 +225,7 @@ void RenderScene()
     model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     Text2->UseTexture();
-    DullMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     meshList[1]->RenderMesh();
 }
 
@@ -245,7 +245,6 @@ void DirectionalShadowMapPass(const std::unique_ptr<DirectionalLight>& light)
     uniformModel = directionalShadowShader->GetModelLocation();
     glm::mat4 lightTransform = light->CalculateLightTransform();
     directionalShadowShader->SetDirLightTransform(&lightTransform);
-
     directionalShadowShader->Validate();
     // Then call RenderScene() to render the scene from the perspective of the ligth source.
     RenderScene();
@@ -256,28 +255,27 @@ void DirectionalShadowMapPass(const std::unique_ptr<DirectionalLight>& light)
 // This pass is for the omni shadow map to be render
 void OmniShadowMapPass(const std::unique_ptr<PointLight>& light)
 {
-    OmniShadowShader->UseShader();
     glViewport(0,0,light->GetShadowMap()->GetShadowMapWidth(),
                     light->GetShadowMap()->GetShadowMapHeight());
 
-    light->GetShadowMap()->Write();
-    glClear(GL_DEPTH_BUFFER_BIT);
-
+    OmniShadowShader->UseShader();
     uniformModel = OmniShadowShader->GetModelLocation();
     uniformOmniLightPos = OmniShadowShader->GetOmniLightPositionLocation();
     uniformFarPlane = OmniShadowShader->GetFarPlaneLocation();
+    
+    light->GetShadowMap()->Write();
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     glUniform3f(uniformOmniLightPos,light->GetPosition().x,light->GetPosition().y,light->GetPosition().z);
     glUniform1f(uniformFarPlane,light->GetFarPlane());
 
     OmniShadowShader->SetLightMatrices(light->CalculateLightTransform());
-
-    //OmniShadowShader->Validate();
+    OmniShadowShader->Validate();
 
     RenderScene();
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 }
-// This pass is for the omni shadow map to be render
+// This pass is the same but for SPOTLIGHTS
 void OmniShadowMapPass(const std::unique_ptr<SpotLight>& light)
 {
     OmniShadowShader->UseShader();
@@ -295,8 +293,7 @@ void OmniShadowMapPass(const std::unique_ptr<SpotLight>& light)
     glUniform1f(uniformFarPlane,light->GetFarPlane());
 
     OmniShadowShader->SetLightMatrices(light->CalculateLightTransform());
-
-    //OmniShadowShader->Validate();
+    OmniShadowShader->Validate();
 
     RenderScene();
     glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -317,7 +314,7 @@ void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
     // TODO : Create this function on windows class.
     glViewport(0,0,1366,768);
     // clear window (from 0 to 1 RGBA)
-    glClearColor(0.1f,0.1f,0.1f,1.0f);
+    glClearColor(0.01f,0.01f,0.01f,1.0f);
     // we are now clearing the depth buffer too.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -326,17 +323,22 @@ void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
     glUniform3f(uniformEyePosition,camera->GetPosition().x,camera->GetPosition().y,camera->GetPosition().z);
     
     basicShader->SetDirectionalLight(directionalLight);
-    basicShader->SetPointLights(PointLights->get(),pointLightCount);
-    basicShader->SetSpotLights(SpotLights->get(),spotLightCount);
-
-    SpotLights[0]->SetTransform(camera->GetPosition(),camera->GetDirection()); 
+    // we need it to run in this order, I know is ugly but thats the way it handled it in shader.frag.
+    basicShader->SetPointLights(PointLights,pointLightCount,3,0);
+    basicShader->SetSpotLights(SpotLights,spotLightCount, 3 + pointLightCount, pointLightCount);
 
     glm::mat4 lightTransform = directionalLight->CalculateLightTransform();
     basicShader->SetDirLightTransform(&lightTransform);
     
-    directionalLight->GetShadowMap()->Read(GL_TEXTURE1);
-    basicShader->SetTexture(0);
-    basicShader->SetDirectionalShadowMap(1);
+    // here is the bug / in texture.hpp useTexture we say to use GL_TEXTURE0
+    directionalLight->GetShadowMap()->Read(GL_TEXTURE2);
+    basicShader->SetTexture(1);
+    basicShader->SetDirectionalShadowMap(2);
+
+    glm::vec3 lantern = camera->GetPosition();
+    lantern.y -=0.3f;
+    SpotLights[0]->SetTransform(lantern,camera->GetDirection()); 
+
     basicShader->Validate();
     RenderScene();
 }
@@ -366,37 +368,49 @@ int main()
     DullMaterial = std::make_unique<Material>(0.3f,4);
      // RGB,intensity,direction,diffuseIntensity,shadow map width, shadow map height)
     directionalLight = std::make_unique<DirectionalLight>(glm::vec3(0.7f,0.6f,0.6f),
-                                             0.7f,
+                                             0.4f,
                                              glm::vec3(0.0f,-15.0f,6.0f),0.3f,
                                              1024,1024);
     directionalLight->InitShadowMap();
     // RGB,intensity,diffuseIntensity,position,constant,linear,exponent,shadowWidth,shadowHeight,nearP,farP)
-    PointLights[0] = std::make_unique<PointLight>(glm::vec3(1.0f,0.0f,0.0f),
-                                                1.0f,0.7f,
-                                                glm::vec3(0.0f,2.0f,0.0f),
-                                                0.3f,0.2f,0.1f,
+    PointLights[0] = std::make_unique<PointLight>(glm::vec3(0.0f,0.0f,1.0f),
+                                                0.7f,0.4f,
+                                                glm::vec3(-2.0f,1.0f,0.0f),
+                                                0.3f,0.02f,0.01f,
                                                 1024,1024,
-                                                0.01f,100.0f);
+                                                0.1f,100.0f);
     PointLights[0]->InitShadowMap();
     pointLightCount++;
-    PointLights[1] = std::make_unique<PointLight>(glm::vec3(1.0f,1.0f,0.0f),
-                                                0.6f,0.7f,
-                                                glm::vec3(0.0f,2.0f,0.0f),
+    PointLights[1] = std::make_unique<PointLight>(glm::vec3(0.0f,1.0f,0.0f),
+                                                1.0f,0.7f,
+                                                glm::vec3(3.0f,1.0f,1.0f),
                                                 0.3f,0.2f,0.1f,
                                                 1024,1024,
-                                                0.01f,100.0f);
+                                                0.1f,100.0f);
     PointLights[1]->InitShadowMap();
     pointLightCount++;
     //RGB, intensity, diffuseIntensity, pos, dir, edge, cons, lin,  exp, shadowWidth,shadowHeight,nearP,farP
+    // lantern
     SpotLights[0] = std::make_unique<SpotLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                                1.0f,0.2f,
+                                                6.0f,1.0f,
                                                 glm::vec3(0.0f,-1.5f,0.0f),
                                                 glm::vec3(-100.0f,-1.0f,0.0f),
-                                                30.0f,
+                                                20.0f,
                                                 1.0f,0.4f,0.3f,
                                                 1024,1024,
-                                                0.01f,100.0f);
+                                                0.1f,500.0f);
     SpotLights[0]->InitShadowMap();
+    spotLightCount++;
+
+    SpotLights[1] = std::make_unique<SpotLight>(glm::vec3(1.0f,0.0f,0.0f),
+                                                10.0f,0.1f,
+                                                glm::vec3(4.0f,2.0f,0.0f),
+                                                glm::vec3(0.0f,-1.0f,0.0f),
+                                                30.0f,
+                                                1.0f,0.3f,0.1f,
+                                                1024,1024,
+                                                0.1f,100.0f);
+    SpotLights[1]->InitShadowMap();
     spotLightCount++;
     ///////////////////////////////////////////////////////////////////////////////
     glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,1000.0f);
@@ -425,7 +439,7 @@ int main()
 
         for(int i = 0; i < spotLightCount; i++)
         {
-             OmniShadowMapPass(SpotLights[i]);
+            OmniShadowMapPass(SpotLights[i]);
         }
 
         RenderPass(projection,camera->CalculateViewMatrix());

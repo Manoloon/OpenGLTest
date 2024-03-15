@@ -61,7 +61,6 @@ class PointLight : public Light
     
     std::array<glm::mat4,6> CalculateLightTransform()
     {
-        // should match the order 
         return
         {
             // +x,-x
