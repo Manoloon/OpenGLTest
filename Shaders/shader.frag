@@ -11,12 +11,6 @@ out vec4 colour;
 const int MAX_POINT_LIGHTS = 3;
 const int MAX_SPOT_LIGHTS = 3;
 
-struct OmniShadowMap
-{
-    samplerCube shadowMap;
-    float farPlane;
-};
-
 struct Light
 {
     vec3 colour;
@@ -46,6 +40,12 @@ struct SpotLight
     float edge;
 };
 
+struct OmniShadowMap
+{
+    samplerCube shadowMap;
+    float farPlane;
+};
+
 struct Material
 {
     float specularIntensity;
@@ -53,11 +53,21 @@ struct Material
 };
 
 uniform DirectionalLight dirLight;
+
 uniform PointLight pLights[MAX_POINT_LIGHTS];
 uniform int pointLightCount;
+
 uniform SpotLight sLights[MAX_SPOT_LIGHTS];
 uniform int spotLightCount;
+
 uniform vec3 eyePosition;
+
+// Texture0
+uniform sampler2D theTexture;
+// Texture1
+uniform sampler2D directionalShadowMap;
+uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
+uniform Material material;
 
 // this is for PCF (avoid a nested for loop)
 vec3 gridSamplingDisk[20] = vec3[]
@@ -68,13 +78,6 @@ vec3 gridSamplingDisk[20] = vec3[]
    vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
    vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
 );
-
-// Texture0
-uniform sampler2D theTexture;
-// Texture1
-uniform sampler2D directionalShadowMap;
-uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
-uniform Material material;
 
 float CalcOmniShadowFactor(PointLight light, int shadowIndex)
 {
@@ -94,13 +97,14 @@ float CalcOmniShadowFactorWithPCF(PointLight light, int shadowIndex)
     float current = length(fragToLight);
 
     float shadow = 0.0;
-    float bias = 0.05;
+    float bias = 0.15;
     int samples = 20;
     float viewDist = length(eyePosition - FragPos);
-    float diskRadius = (1.0 + viewDist / (omniShadowMaps[shadowIndex].farPlane)) / 25.0;
+    float diskRadius = (1.0 + (viewDist / omniShadowMaps[shadowIndex].farPlane)) / 25.0;
     for(int i = 0; i < samples; i++)
     {
-        float closest = texture(omniShadowMaps[shadowIndex].shadowMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        float closest = texture(omniShadowMaps[shadowIndex].shadowMap, 
+                                fragToLight + gridSamplingDisk[i] * diskRadius).r;
         closest *= omniShadowMaps[shadowIndex].farPlane;
         if(current - bias > closest)
         {
@@ -185,7 +189,7 @@ vec4 CalcPointLight(PointLight pLight, int shadowIndex)
     float distance = length(direction);
     direction = normalize(direction);
 
-    float shadowFactor = CalcOmniShadowFactor(pLight,shadowIndex);
+    float shadowFactor = CalcOmniShadowFactorWithPCF(pLight,shadowIndex);
 
     vec4 color = CalcLightByDirection(pLight.base,direction,shadowFactor);
     // ax^2 + bx + c ; x = distance

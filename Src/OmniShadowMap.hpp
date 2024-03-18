@@ -6,10 +6,10 @@ class OmniShadowMap : public ShadowMap
 {
 
     public:
-    virtual bool Init(unsigned int Width,unsigned int Height)
+    virtual bool Init(unsigned int Size)
     {
-        sWidth = Width;
-        sHeight = Height;
+        sWidth = Size;
+        sHeight = Size;
 
         glGenFramebuffers(1,&FBO);
         glGenTextures(1,&shadowMap);
@@ -20,8 +20,8 @@ class OmniShadowMap : public ShadowMap
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, sWidth, sHeight, 0, 
                                 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
         }
-        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 
         glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
@@ -47,8 +47,7 @@ class OmniShadowMap : public ShadowMap
 
     virtual void Write()
     {
-        //GL_DRAW_FRAMEBUFFER
-        glBindFramebuffer(GL_FRAMEBUFFER,FBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER,FBO);
     }
 
     virtual void Read(GLenum textUnit)

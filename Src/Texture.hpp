@@ -83,11 +83,11 @@ bool LoadTextureWithAlpha()
     return true;
 }
 
-void UseTexture ()
-{
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D,textureID);
-}
+    void UseTexture ()
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,textureID);
+    }
 
 };
 

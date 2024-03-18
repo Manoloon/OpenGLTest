@@ -15,7 +15,7 @@ class PointLight : public Light
     GLfloat linear = 0.0f;
     GLfloat exponent = 0.0f;
 
-    GLfloat farPlane;
+    GLfloat farPlane = 0.1f;
     std::unique_ptr<OmniShadowMap> shadowMap;
 
     public :
@@ -26,11 +26,10 @@ class PointLight : public Light
                             GLfloat cons,
                             GLfloat lin, 
                             GLfloat exp,
-                            GLuint shadowWidth,
-                            GLuint shadowHeight,
+                            GLuint shadowSize,
                             GLfloat nearP,
                             GLfloat farP):
-                Light(RGB,intensity,diffuseIntensity,shadowWidth,shadowHeight),shadowMap{std::make_unique<OmniShadowMap>()}
+                Light(RGB,intensity,diffuseIntensity,shadowSize,shadowSize),shadowMap{std::make_unique<OmniShadowMap>()}
                 {
                     position = pos;
                     constant = cons;
@@ -39,7 +38,7 @@ class PointLight : public Light
                     farPlane = farP;
                     // shadowWidth and height should be equal because is a cube
                     // TODO see if we can get riddle off these later.
-                    float aspectRatio = shadowWidth/shadowHeight;
+                    float aspectRatio = 1.0f;
                     lightProjection = glm::perspective(glm::radians(90.0f),aspectRatio,nearP,farP);
                 }
 
@@ -87,11 +86,8 @@ class PointLight : public Light
 
     virtual void InitShadowMap()
     {
-        if (shadowHeight != shadowWidth ||  shadowHeight == 0 )
-        {
-            throw std::invalid_argument("Shadow map for cubes need height == width and NOT ZERO !!!");
-        }
-        shadowMap->Init(shadowWidth,shadowHeight);
+        shadowMap->Init(shadowHeight);
     }
+
     const std::unique_ptr<OmniShadowMap>& GetShadowMap() const {return shadowMap;}
 };

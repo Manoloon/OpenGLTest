@@ -194,6 +194,23 @@ void RenderScene()
     ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
     meshList[0]->RenderMesh();
 
+    // piramid 2
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(14.0f,0.0f,3.0f));
+    model = glm::scale(model,glm::vec3(2.0,2.0,2.0));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    Text1->UseTexture();
+    ShinyMaterial->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    meshList[0]->RenderMesh();
+
+    // Floor this is an obj on a the scene.
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    Text2->UseTexture();
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    meshList[1]->RenderMesh();
+
     uh60Angle += 0.1f;
 
     if(uh60Angle > 360.0)
@@ -219,14 +236,6 @@ void RenderScene()
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     uh60Model->RenderModel();
-
-    // Floor this is an obj on a the scene.
-    model = glm::mat4(1.0f);
-    model = glm::translate(model,glm::vec3(0.0f,-2.0f,0.0f));
-    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
-    Text2->UseTexture();
-    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
-    meshList[1]->RenderMesh();
 }
 
 // Render shadows cast by directional light source.
@@ -257,7 +266,7 @@ void OmniShadowMapPass(const std::unique_ptr<PointLight>& light)
 {
     glViewport(0,0,light->GetShadowMap()->GetShadowMapWidth(),
                     light->GetShadowMap()->GetShadowMapHeight());
-
+    
     OmniShadowShader->UseShader();
     uniformModel = OmniShadowShader->GetModelLocation();
     uniformOmniLightPos = OmniShadowShader->GetOmniLightPositionLocation();
@@ -337,7 +346,7 @@ void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 
     glm::vec3 lantern = camera->GetPosition();
     lantern.y -=0.3f;
-    SpotLights[0]->SetTransform(lantern,camera->GetDirection()); 
+    SpotLights[0]->SetTransform(lantern,camera->GetDirection());
 
     basicShader->Validate();
     RenderScene();
@@ -377,7 +386,7 @@ int main()
                                                 0.7f,0.4f,
                                                 glm::vec3(-2.0f,1.0f,0.0f),
                                                 0.3f,0.02f,0.01f,
-                                                1024,1024,
+                                                1024,
                                                 0.1f,100.0f);
     PointLights[0]->InitShadowMap();
     pointLightCount++;
@@ -385,7 +394,7 @@ int main()
                                                 1.0f,0.7f,
                                                 glm::vec3(3.0f,1.0f,1.0f),
                                                 0.3f,0.2f,0.1f,
-                                                1024,1024,
+                                                1024,
                                                 0.1f,100.0f);
     PointLights[1]->InitShadowMap();
     pointLightCount++;
@@ -397,18 +406,18 @@ int main()
                                                 glm::vec3(-100.0f,-1.0f,0.0f),
                                                 20.0f,
                                                 1.0f,0.4f,0.3f,
-                                                1024,1024,
+                                                1024,
                                                 0.1f,500.0f);
     SpotLights[0]->InitShadowMap();
     spotLightCount++;
-
+    // heli flashlight
     SpotLights[1] = std::make_unique<SpotLight>(glm::vec3(1.0f,0.0f,0.0f),
                                                 10.0f,0.1f,
                                                 glm::vec3(4.0f,2.0f,0.0f),
                                                 glm::vec3(0.0f,-1.0f,0.0f),
                                                 30.0f,
                                                 1.0f,0.3f,0.1f,
-                                                1024,1024,
+                                                1024,
                                                 0.1f,100.0f);
     SpotLights[1]->InitShadowMap();
     spotLightCount++;

@@ -32,7 +32,7 @@ class Shader{
     {
         GLuint uniformShadowMap;
         GLuint uniformFarPlane;
-    } uniformOmniShadowMap[MAX_POINT_LIGHTS+ MAX_SPOT_LIGHTS];
+    } FUniformOmniShadowMap[MAX_POINT_LIGHTS+ MAX_SPOT_LIGHTS];
 
     struct 
     {
@@ -123,10 +123,10 @@ class Shader{
         {
             char locBuff[100] = {'\0'};
             snprintf(locBuff,sizeof(locBuff),"omniShadowMaps[%d].shadowMap",i);
-            uniformOmniShadowMap[i].uniformShadowMap = glGetUniformLocation(shaderID,locBuff);
+            FUniformOmniShadowMap[i].uniformShadowMap = glGetUniformLocation(shaderID,locBuff);
 
             snprintf(locBuff,sizeof(locBuff),"omniShadowMaps[%d].farPlane",i);
-            uniformOmniShadowMap[i].uniformFarPlane = glGetUniformLocation(shaderID,locBuff);
+            FUniformOmniShadowMap[i].uniformFarPlane = glGetUniformLocation(shaderID,locBuff);
         }
 
         if(geometryCode != nullptr)
@@ -329,8 +329,8 @@ class Shader{
                                 FUniformPointLights[i].uniformLinear,
                                 FUniformPointLights[i].uniformExponent);
                 pLight[i]->GetShadowMap()->Read(GL_TEXTURE0 + textureUnit + i);
-                glUniform1i(uniformOmniShadowMap[i+offset].uniformShadowMap,textureUnit + i);
-                glUniform1f(uniformOmniShadowMap[i+offset].uniformFarPlane, pLight[i]->GetFarPlane());
+                glUniform1i(FUniformOmniShadowMap[i+offset].uniformShadowMap,textureUnit + i);
+                glUniform1f(FUniformOmniShadowMap[i+offset].uniformFarPlane, pLight[i]->GetFarPlane());
             }
         }
 
@@ -352,8 +352,8 @@ class Shader{
                                 FUniformSpotLights[i].uniformExponent);
 
                 sLight[i]->GetShadowMap()->Read(GL_TEXTURE0 + textureUnit + i);
-                glUniform1i(uniformOmniShadowMap[i+offset].uniformShadowMap,textureUnit + i);
-                glUniform1f(uniformOmniShadowMap[i+offset].uniformFarPlane, sLight[i]->GetFarPlane());
+                glUniform1i(FUniformOmniShadowMap[i+offset].uniformShadowMap,textureUnit + i);
+                glUniform1f(FUniformOmniShadowMap[i+offset].uniformFarPlane, sLight[i]->GetFarPlane());
             }
         }
 

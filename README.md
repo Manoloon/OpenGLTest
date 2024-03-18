@@ -81,7 +81,7 @@ bind = GL_TEXTURE_CUBE_MAP
 teximage2D = GL_TEXTURE_CUBE_MAP_POSITIVE_X, NEGATIVE_X, POSITIVE_Y, NEGATIVE_Y
 POSITIVE_Z, NEGATIVE_Z ( 6 in total)
 
-buscar imagen de pointlight shadow , y cubemap 
+![pointlights shadow](https://learnopengl.com/img/advanced-lighting/point_shadows_diagram.png)
 
 dont use UVs 
 can access point on cube map with direction vector pointing to Texel on cube map from center of the cube.
