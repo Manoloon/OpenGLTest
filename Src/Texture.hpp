@@ -1,9 +1,9 @@
 #pragma once
-#define STB_IMAGE_IMPLEMENTATION
+
 #define STBI_FAILURE_USERMSG
 
 #include <GL/glew.h>
-#include "../stb_image.h"
+#include "Constants.h"
 #include <iostream>
 #include <string>
 

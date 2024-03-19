@@ -8,7 +8,8 @@ find_package(ASSIMP REQUIRED)
 
 
 include_directories(${GLEW_INCLUDE_DIRS})
-include_directories(E:\\Coding\\CppProjects\\CommonLibs\\glm,
+include_directories(${CMAKE_SOURCE_DIR}/Externals,
+                    E:\\Coding\\CppProjects\\CommonLibs\\glm,
                     E:\\Coding\\CppProjects\\CommonLibs\\glfw\\include,
                     E:\\Coding\\msys64\\mingw64\\include\\assimp)
 add_executable(OpenGLTest main.cpp)
