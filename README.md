@@ -36,6 +36,11 @@ each vertex have an average of the normals of all the surfaces it is part of.
 # Using Assimp to import models
 
 # Shadow Mapping
+# Directional shadow
+![directional shadow](https://learnopengl.com/img/advanced-lighting/shadow_mapping_theory.png)
+
+![directional shadow](https://learnopengl.com/img/advanced-lighting/shadow_mapping_theory_spaces.png)
+
 It create a texture2D by calculating where the rays of lights are hitting and where they not. 
 It use a framebuffer as holder and then this information is store in the texture.
 At least 2 rendering passes are needed : 1 for create the shadow map and a second one to draw the scene.

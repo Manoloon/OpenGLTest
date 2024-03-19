@@ -79,25 +79,13 @@ vec3 gridSamplingDisk[20] = vec3[]
    vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
 );
 
-float CalcOmniShadowFactor(PointLight light, int shadowIndex)
+float CalcOmniShadowFactor(vec3 lightPos, int shadowIndex)
 {
-    vec3 fragToLight = FragPos - light.position;
-    float closest = texture(omniShadowMaps[shadowIndex].shadowMap, fragToLight).r;
-
-    closest *= omniShadowMaps[shadowIndex].farPlane;
-    float current = length(fragToLight);
-    float bias = 0.05;
-    float shadow = current - bias > closest ? 1.0 : 0.0;
-    return shadow;
-}
-
-float CalcOmniShadowFactorWithPCF(PointLight light, int shadowIndex)
-{
-    vec3 fragToLight = FragPos - light.position;
+    vec3 fragToLight = FragPos - lightPos;
     float current = length(fragToLight);
 
     float shadow = 0.0;
-    float bias = 0.15;
+    float bias = 0.05;
     int samples = 20;
     float viewDist = length(eyePosition - FragPos);
     float diskRadius = (1.0 + (viewDist / omniShadowMaps[shadowIndex].farPlane)) / 25.0;
@@ -112,12 +100,12 @@ float CalcOmniShadowFactorWithPCF(PointLight light, int shadowIndex)
         }
     }
     shadow /= float(samples);
-    return shadow;
+    return 1.0; // shadow
 }
 
-float CalcShadowFactor(DirectionalLight light)
+float CalcShadowFactor(vec4 DirectionalLightSpacePos)
 {
-    vec3 projCoords = DirLightSpacePos.xyz / DirLightSpacePos.w;
+    vec3 projCoords = DirectionalLightSpacePos.xyz / DirectionalLightSpacePos.w;
     projCoords = (projCoords * 0.5) + 0.5;
 
     // here we calc forwards and backwards of the closest point in that direction
@@ -129,9 +117,9 @@ float CalcShadowFactor(DirectionalLight light)
     // solve acne 
 
     vec3 normal = normalize(Normal);
-    vec3 lightDir = normalize(light.direction);
+    vec3 lightDir = normalize(dirLight.direction);
     float bias = max(0.05 * (1.0 - dot(normal,lightDir)), 0.0005);
-    float shadow = 0.0;
+    float shadow = 1.0;
     // PCF
     vec2 texelSize = 1.0 / textureSize(directionalShadowMap,0);
     for(int x = -1; x <= 1; ++x)
@@ -143,12 +131,11 @@ float CalcShadowFactor(DirectionalLight light)
         }
     }
     shadow /= 9.0;
-    ////////
+    
     if (projCoords.z > 1.0)
     {
         shadow = 0.0;
     }
-    ///
     return shadow;
 }
 
@@ -159,7 +146,7 @@ vec4 CalcLightByDirection(Light light, vec3 direction,float shadowFactor)
     // A.B = |A||B|cos(angle)
     float diffuseFactor = max(dot(normalize(Normal), normalize(direction)),0.0f);
     
-    vec4 diffuseCol = vec4(light.colour,1.0f) * light.diffuseIntensity * diffuseFactor; 
+    vec4 diffuseCol = vec4(light.colour * light.diffuseIntensity * diffuseFactor,1.0f); 
     
     vec4 specularCol = vec4(0,0,0,0);
     
@@ -177,26 +164,31 @@ vec4 CalcLightByDirection(Light light, vec3 direction,float shadowFactor)
     return (ambientCol + (1.0f - shadowFactor) * (diffuseCol + specularCol));
 }
 
-vec4 CalcDirectionalLight()
+vec4 CalcDirectionalLight(vec4 DirectionalLightSpacePos)
 {   
-    float shadowFactor = CalcShadowFactor(dirLight);
+    float shadowFactor = CalcShadowFactor(DirectionalLightSpacePos);
     return CalcLightByDirection(dirLight.base,dirLight.direction,shadowFactor);
 }
 
 vec4 CalcPointLight(PointLight pLight, int shadowIndex)
 {
     vec3 direction = FragPos - pLight.position;
-    float distance = length(direction);
+    float dist = length(direction);
     direction = normalize(direction);
 
-    float shadowFactor = CalcOmniShadowFactorWithPCF(pLight,shadowIndex);
+    float shadowFactor = CalcOmniShadowFactor(pLight.position,shadowIndex);
 
     vec4 color = CalcLightByDirection(pLight.base,direction,shadowFactor);
     // ax^2 + bx + c ; x = distance
-    float attenuation = pLight.exponent * distance * distance + 
-                        pLight.linear * distance +
+    float attenuation = pLight.exponent * dist * dist + 
+                        pLight.linear * dist +
                         pLight.constant;
-    return (color/attenuation);
+                        
+    if(attenuation > 0)
+    {
+        return (color/attenuation);
+    }
+    return (color);
 }
 
 vec4 CalcTotalPointLights()
@@ -235,7 +227,7 @@ vec4 CalcTotalSpotLights()
 
 void main()         
 {               
-    vec4 finalColor = CalcDirectionalLight();
+    vec4 finalColor = CalcDirectionalLight(DirLightSpacePos);
     
     finalColor += CalcTotalPointLights();
     finalColor += CalcTotalSpotLights();

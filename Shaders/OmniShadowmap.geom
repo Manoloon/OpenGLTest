@@ -1,11 +1,9 @@
 #version 330
-// this data came from the vertex shader.
 layout (triangles) in;
 layout (triangle_strip, max_vertices=18) out;
 
 uniform mat4 lightMatrices[6];
 
-// this is the data that will be passes to the fragment shader.
 out vec4 FragPos;
 
 void main()

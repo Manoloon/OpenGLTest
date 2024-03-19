@@ -372,7 +372,7 @@ class Shader{
             glUniformMatrix4fv(uniformDirLightTransform,1,GL_FALSE,glm::value_ptr(*lightTransform));
         }
 
-        void SetLightMatrices(std::array<glm::mat4,6> lightsMatrices)
+        void SetLightMatrices(const std::array<glm::mat4,6>& lightsMatrices)
         {
             for(int i = 0;i < 6; i++)
             {

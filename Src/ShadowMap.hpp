@@ -21,8 +21,7 @@ class ShadowMap
         sWidth = Width;
         sHeight = Height;
 
-        glGenFramebuffers(1, &FBO);
-
+        
         glGenTextures(1,&shadowMap);
         glBindTexture(GL_TEXTURE_2D,shadowMap);
 
@@ -35,7 +34,8 @@ class ShadowMap
 
         float clampColor[] = {1.0f,1.0f,1.0f,1.0f};
         glTexParameterfv(GL_TEXTURE_2D,GL_TEXTURE_BORDER_COLOR,clampColor);
-        // here we can use GL_DRAWFRAMEBUFFER
+        
+        glGenFramebuffers(1, &FBO);
         glBindFramebuffer(GL_FRAMEBUFFER,FBO);
         glFramebufferTexture2D(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,shadowMap,0);
 

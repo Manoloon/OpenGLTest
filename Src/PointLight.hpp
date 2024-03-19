@@ -36,8 +36,6 @@ class PointLight : public Light
                     linear = lin;
                     exponent = exp;
                     farPlane = farP;
-                    // shadowWidth and height should be equal because is a cube
-                    // TODO see if we can get riddle off these later.
                     float aspectRatio = 1.0f;
                     lightProjection = glm::perspective(glm::radians(90.0f),aspectRatio,nearP,farP);
                 }
@@ -48,10 +46,10 @@ class PointLight : public Light
     {
         glUniform3f(ambientColourLocation,colour.x,colour.y,colour.z);
         glUniform1f(ambientIntensityLocation,ambientIntensity);
+        glUniform1f(diffuseIntensityLocation,diffuseIntensity);
 
         glUniform3f(positionLocation,position.x,position.y,position.z);
         
-        glUniform1f(diffuseIntensityLocation,diffuseIntensity);
         glUniform1f(constantLocation,constant);
         glUniform1f(linearLocation,linear);
         glUniform1f(exponentLocation,exponent);

@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 
 class Camera{
-    glm::vec3 cameraPosition = {9.0f, 4.0f, 16.0f};
+    glm::vec3 cameraPosition = {5.0f, 4.0f, 5.0f};
     //glm::vec3 CameraDirection = {0.0f, 0.0f, 0.0f};
     glm::vec3 forwardVector = {0.0f, 0.0f, -1.0f};
     glm::vec3 upVector = {0.0f,1.0f,0.0f};
@@ -13,7 +13,7 @@ class Camera{
     GLfloat pitch = 0.0f;
     GLfloat roll = 0.0f;
 
-    GLfloat moveSpeed = 4.0f;
+    GLfloat moveSpeed = 8.0f;
     GLfloat turnSpeed = 0.5f;
 
     void Update(){

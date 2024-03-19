@@ -8,7 +8,6 @@
 #include <vector>
 #include <memory>
 #include <Assimp/Importer.hpp>
-//#include <GLM\glm.hpp>
 #include <GLM\gtc\matrix_transform.hpp>
 #include <GLM\gtc\type_ptr.hpp>
 #include <GLM\mat4x4.hpp>
@@ -65,7 +64,9 @@ unsigned int pointLightCount =0;
 unsigned int spotLightCount = 0;
 
  
-GLfloat uh60Angle = 0.0f;   
+GLfloat uh60Angle = 0.0f;
+GLfloat uh60Angle2 = 0.0f; 
+GLfloat uh60Angle3 = 0.0f; 
 // RGB,intensity,directionLocation,diffuseIntensity,shadow map Width,shadow map height)
 std::unique_ptr<DirectionalLight> directionalLight;
 std::array<std::unique_ptr<PointLight>,MAX_POINT_LIGHTS> PointLights;
@@ -137,10 +138,10 @@ void CreateObjects()
         GLfloat vertices[]
         {
             //x,     y,    z,      U,       V       Nx      Ny      Nz
-            -4.f,   -4.f,  -4.0f,  0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
-            0.f,    -4.f,  4.f,    0.5f,   0.0f,   0.0f,   0.0f,   0.0f,
-            4.f,    -4.f,  -4.0f,  2.0f,   0.0f,   0.0f,   0.0f,   0.0f,
-            0.f,    4.f,   0.f,    0.5f,   2.0f,   0.0f,   0.0f,   0.0f
+            -4.0f,   -4.0f,  -3.0f,  0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            0.0f,    -4.0f,  4.0f,    3.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            4.0f,    -4.0f,  -3.0f,  4.0f,   0.0f,   0.0f,   0.0f,   0.0f,
+            0.0f,    4.0f,   0.f,    3.0f,   4.0f,   0.0f,   0.0f,   0.0f
         };
 
          unsigned int floorIndices[]
@@ -152,10 +153,10 @@ void CreateObjects()
         GLfloat floorVertices[]
         {
             //x,     y,    z,      U,       V       Nx      Ny      Nz
-            -20.f,   0.f,  -20.0f,   0.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
-             20.f,    0.f,  -20.f,   5.0f,  0.0f,   0.0f,   -1.0f,   0.0f,
-            -20.f,   0.f,  20.0f,    0.0f,   5.0f,   0.0f,   -1.0f,   0.0f,
-             20.f,    0.f,  20.f,    5.0f,  5.0f,   0.0f,   -1.0f,   0.0f
+            -30.f,   0.f,  -30.0f,   0.0f,   0.0f,   0.0f,   -1.0f,   0.0f,
+             30.f,    0.f,  -30.f,   20.0f,  0.0f,   0.0f,   -1.0f,   0.0f,
+            -30.f,   0.f,  30.0f,    0.0f,   20.0f,   0.0f,   -1.0f,   0.0f,
+             30.f,    0.f,  30.f,    20.0f,  20.0f,   0.0f,   -1.0f,   0.0f
         };
 
         CalculateAvgNormals(indices,12,vertices,32,8,5);
@@ -196,7 +197,7 @@ void RenderScene()
 
     // piramid 2
     model = glm::mat4(1.0f);
-    model = glm::translate(model,glm::vec3(14.0f,0.0f,3.0f));
+    model = glm::translate(model,glm::vec3(16.0f,6.0f,4.0f));
     model = glm::scale(model,glm::vec3(2.0,2.0,2.0));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     Text1->UseTexture();
@@ -212,10 +213,20 @@ void RenderScene()
     meshList[1]->RenderMesh();
 
     uh60Angle += 0.1f;
+    uh60Angle2 += 0.07f;
+    uh60Angle3 += 0.05f;
 
     if(uh60Angle > 360.0)
     {
         uh60Angle = 0.0f;
+    }
+    if(uh60Angle2 > 360.0)
+    {
+        uh60Angle2 = 0.0f;
+    }
+    if(uh60Angle3 > 360.0)
+    {
+        uh60Angle3 = 0.0f;
     }
     //Model uh60
     model = glm::mat4(1.0f);
@@ -223,16 +234,56 @@ void RenderScene()
     model = glm::translate(model,glm::vec3(-8.0f,2.0f,0.0f));
     model = glm::rotate(model,-20 * ToRad,glm::vec3(0.0f,0.0,1.0f));
     model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
-    model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
+    model = glm::scale(model,glm::vec3(0.3,0.3,0.3));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     uh60Model->RenderModel();
     
+    //Model uh60
+    model = glm::mat4(1.0f);
+    model = glm::rotate(model,-uh60Angle2 * ToRad,glm::vec3(0.0f,1.0,0.0f));
+    model = glm::translate(model,glm::vec3(-8.0f,1.0f,0.0f));
+    model = glm::rotate(model,-20 * ToRad,glm::vec3(0.0f,0.0,1.0f));
+    model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    model = glm::scale(model,glm::vec3(0.3,0.3,0.3));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    uh60Model->RenderModel();
+
+    //Model uh60
+    model = glm::mat4(1.0f);
+    model = glm::rotate(model,-uh60Angle3 * ToRad,glm::vec3(0.0f,1.0,0.0f));
+    model = glm::translate(model,glm::vec3(-8.0f,3.0f,0.0f));
+    model = glm::rotate(model,-20 * ToRad,glm::vec3(0.0f,0.0,1.0f));
+    model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    model = glm::scale(model,glm::vec3(0.3,0.3,0.3));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    uh60Model->RenderModel();
+
      //Model uh60
     model = glm::mat4(1.0f);
-    model = glm::translate(model,glm::vec3(-8.0f,-1.2f,0.0f));
+    model = glm::translate(model,glm::vec3(-8.0f,-1.7f,0.0f));
     model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
-    model = glm::scale(model,glm::vec3(0.5,0.5,0.5));
+    model = glm::scale(model,glm::vec3(0.2,0.2,0.2));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    uh60Model->RenderModel();
+
+     //Model uh60
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(4.0f,-1.7f,3.0f));
+    model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    model = glm::scale(model,glm::vec3(0.2,0.2,0.2));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    uh60Model->RenderModel();
+
+     //Model uh60
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(-3.0f,-1.7f,0.0f));
+    model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
+    model = glm::scale(model,glm::vec3(0.2,0.2,0.2));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
     SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     uh60Model->RenderModel();
@@ -263,21 +314,21 @@ void DirectionalShadowMapPass(const std::unique_ptr<DirectionalLight>& light)
 
 // This pass is for the omni shadow map to be render
 void OmniShadowMapPass(const std::unique_ptr<PointLight>& light)
-{
+{  
+    OmniShadowShader->UseShader();
+
     glViewport(0,0,light->GetShadowMap()->GetShadowMapWidth(),
                     light->GetShadowMap()->GetShadowMapHeight());
-    
-    OmniShadowShader->UseShader();
-    uniformModel = OmniShadowShader->GetModelLocation();
-    uniformOmniLightPos = OmniShadowShader->GetOmniLightPositionLocation();
-    uniformFarPlane = OmniShadowShader->GetFarPlaneLocation();
-    
+
     light->GetShadowMap()->Write();
     glClear(GL_DEPTH_BUFFER_BIT);
 
+    uniformModel = OmniShadowShader->GetModelLocation();
+    uniformOmniLightPos = OmniShadowShader->GetOmniLightPositionLocation();
+    uniformFarPlane = OmniShadowShader->GetFarPlaneLocation();
+
     glUniform3f(uniformOmniLightPos,light->GetPosition().x,light->GetPosition().y,light->GetPosition().z);
     glUniform1f(uniformFarPlane,light->GetFarPlane());
-
     OmniShadowShader->SetLightMatrices(light->CalculateLightTransform());
     OmniShadowShader->Validate();
 
@@ -288,6 +339,7 @@ void OmniShadowMapPass(const std::unique_ptr<PointLight>& light)
 void OmniShadowMapPass(const std::unique_ptr<SpotLight>& light)
 {
     OmniShadowShader->UseShader();
+    
     glViewport(0,0,light->GetShadowMap()->GetShadowMapWidth(),
                 light->GetShadowMap()->GetShadowMapHeight());
 
@@ -383,46 +435,54 @@ int main()
     directionalLight->InitShadowMap();
     // RGB,intensity,diffuseIntensity,position,constant,linear,exponent,shadowWidth,shadowHeight,nearP,farP)
     PointLights[0] = std::make_unique<PointLight>(glm::vec3(0.0f,0.0f,1.0f),
-                                                0.7f,0.4f,
+                                                0.6f,0.0f,
                                                 glm::vec3(-2.0f,1.0f,0.0f),
-                                                0.3f,0.02f,0.01f,
+                                                1.0, 	0.22 ,	0.20, // 20
                                                 1024,
-                                                0.1f,100.0f);
+                                                0.01f,50.0f);
     PointLights[0]->InitShadowMap();
     pointLightCount++;
-    PointLights[1] = std::make_unique<PointLight>(glm::vec3(0.0f,1.0f,0.0f),
-                                                1.0f,0.7f,
-                                                glm::vec3(3.0f,1.0f,1.0f),
-                                                0.3f,0.2f,0.1f,
+    PointLights[1] = std::make_unique<PointLight>(glm::vec3(3.0f,10.0f,0.0f),
+                                                0.6f,0.0f,
+                                                glm::vec3(-6.0f,1.0f,1.0f),
+                                                1.0,0.35, 0.44, // 13
                                                 1024,
-                                                0.1f,100.0f);
+                                                0.01f,50.0f);
     PointLights[1]->InitShadowMap();
     pointLightCount++;
-    //RGB, intensity, diffuseIntensity, pos, dir, edge, cons, lin,  exp, shadowWidth,shadowHeight,nearP,farP
-    // lantern
-    SpotLights[0] = std::make_unique<SpotLight>(glm::vec3(1.0f,1.0f,1.0f),
-                                                6.0f,1.0f,
-                                                glm::vec3(0.0f,-1.5f,0.0f),
-                                                glm::vec3(-100.0f,-1.0f,0.0f),
-                                                20.0f,
-                                                1.0f,0.4f,0.3f,
+    PointLights[2] = std::make_unique<PointLight>(glm::vec3(1.0f,4.0f,0.0f),
+                                                0.5f,0.3f,
+                                                glm::vec3(-6.0f,2.0f,0.0f),
+                                                1.0, 0.7, 1.8, // 7
                                                 1024,
-                                                0.1f,500.0f);
+                                                0.01f,50.0f);
+    PointLights[2]->InitShadowMap();
+    pointLightCount++;
+    // lantern
+    SpotLights[0] = std::make_unique<SpotLight>(glm::vec3(1.0f,1.0f,1.0f), //RGB
+                                                1.0f,0.0f, //intensity, diffuseIntensity
+                                                glm::vec3(0.0f,-1.5f,0.0f), //pos
+                                                glm::vec3(-100.0f,-1.0f,0.0f), //dir
+                                                10.0f, //edge
+                                                1.0f,0.07f,0.0017f, // 65 dist //cons, lin,  exp
+                                                1024, //shadowSize
+                                                0.01f,50.0f); //nearP,farP
     SpotLights[0]->InitShadowMap();
     spotLightCount++;
     // heli flashlight
     SpotLights[1] = std::make_unique<SpotLight>(glm::vec3(1.0f,0.0f,0.0f),
-                                                10.0f,0.1f,
-                                                glm::vec3(4.0f,2.0f,0.0f),
+                                                2.0f,0.1f,
+                                                glm::vec3(4.0f,4.0f,0.0f),
                                                 glm::vec3(0.0f,-1.0f,0.0f),
                                                 30.0f,
-                                                1.0f,0.3f,0.1f,
+                                                1.0f,0.022f,0.0019f, // 200 dist
                                                 1024,
-                                                0.1f,100.0f);
+                                                0.01f,50.0f);
     SpotLights[1]->InitShadowMap();
     spotLightCount++;
     ///////////////////////////////////////////////////////////////////////////////
-    glm::mat4 projection = glm::perspective(FOV,aspectRatio,0.1f,1000.0f);
+
+    glm::mat4 camProjection = glm::perspective(FOV,aspectRatio,0.1f,50.0f);
 
     GLfloat lastFrameTime = 0.0f;
     GLfloat deltaTime = 0.0f;
@@ -450,8 +510,8 @@ int main()
         {
             OmniShadowMapPass(SpotLights[i]);
         }
-
-        RenderPass(projection,camera->CalculateViewMatrix());
+       
+        RenderPass(camProjection,camera->CalculateViewMatrix());
 
         // 2 buffers at this moment.
         MainWindow.SwapBuffers();
