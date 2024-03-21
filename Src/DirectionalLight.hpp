@@ -15,7 +15,7 @@ public:
                                 GLuint shadowHeight)
     : Light(RGB,intensity,diffuseIntensity,shadowWidth,shadowHeight),direction(dir),shadowMap{std::make_unique<ShadowMap>()}
     {
-        lightProjection = glm::ortho(-15.0f,15.0f,-15.0f,15.0f,0.1f,75.0f);
+        lightProjection = glm::ortho(-20.0f,20.0f,-20.0f,20.0f,0.1f,100.0f);
     }
     //ambientIntensityLocation, GLuint ambientColourLocation, GLuint directionLocation, GLuint diffuseIntensityLocation
     void Use(GLuint ambientIntensityLocation, GLuint ambientColourLocation, GLuint directionLocation, GLuint diffuseIntensityLocation)

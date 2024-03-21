@@ -59,7 +59,9 @@ class Camera{
 
             yaw += xChange;
             pitch += yChange;
-            
+
+            //printf("yaw: %f, pitch: %f",yaw,pitch);
+
             if(pitch > 89.0f) pitch = 89.0f;
             if(pitch < -89.0f) pitch = -89.0f;
             Update();

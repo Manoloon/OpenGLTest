@@ -24,6 +24,7 @@
 #include "Src/PointLight.hpp"
 #include "Src/SpotLight.hpp"
 #include "Src/Material.hpp"
+#include "Src/SkyBox.hpp"
 
 const float ToRad = 3.14159265f / 180.f;
 
@@ -49,6 +50,8 @@ std::shared_ptr<Model> uh60Model;
 std::unique_ptr<Material>  SuperShinyMat;
 std::unique_ptr<Material>  ShinyMaterial;
 std::unique_ptr<Material>  DullMaterial;
+
+std::unique_ptr<SkyBox> skyBox;
 
 GLuint uniformModel = 0;
 GLuint uniformView = 0;
@@ -159,6 +162,41 @@ void CreateObjects()
              30.f,    0.f,  30.f,    20.0f,  20.0f,   0.0f,   -1.0f,   0.0f
         };
 
+         unsigned int boxIndices[] = 
+        {
+            // front
+            0, 1, 2,
+            2, 1, 3,
+            // right
+            2, 3, 5,
+            5, 3, 7,
+            // back
+            5, 7, 4,
+            4, 7, 6,
+            // left
+            4, 6, 0,
+            0, 6, 1,
+            // top
+            4, 0, 5,
+            5, 0, 2,
+            // bottom
+            1, 6, 3,
+            3, 6, 7
+        };
+
+    float boxVertices[] = 
+    {
+        -1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, -1.0f, 0.0f,
+        -1.0f, -1.0f, -1.0f,	1.0f, 0.0f,		0.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, -1.0f,		0.0f, 1.0f,		0.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, -1.0f,		1.0f, 1.0f,		0.0f, -1.0f, 0.0f,
+
+        -1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, 1.0f,		1.0f, 0.0f,		0.0f, -1.0f, 0.0f,
+        -1.0f, -1.0f, 1.0f,		0.0f, 1.0f,		0.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 1.0f,		1.0f, 1.0f,		0.0f, -1.0f, 0.0f
+    };  
+
         CalculateAvgNormals(indices,12,vertices,32,8,5);
 
         std::shared_ptr<Mesh> obj1 = std::make_shared<Mesh>();
@@ -168,6 +206,10 @@ void CreateObjects()
         std::shared_ptr<Mesh> floorObj = std::make_shared<Mesh>();
         floorObj->CreateMesh(floorVertices,floorIndices,32,6);
         meshList.emplace_back(floorObj);
+
+        std::shared_ptr<Mesh> boxObj = std::make_shared<Mesh>();
+        boxObj->CreateMesh(boxVertices,boxIndices,64,32);
+        meshList.emplace_back(boxObj);
     }
 
 void CreateShaders()
@@ -211,6 +253,14 @@ void RenderScene()
     Text2->UseTexture();
     SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     meshList[1]->RenderMesh();
+
+    // box this is an obj on a the scene.
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,glm::vec3(6.0f,-2.0f,6.0f));
+    glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
+    Text1->UseTexture();
+    SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
+    meshList[2]->RenderMesh();
 
     uh60Angle += 0.1f;
     uh60Angle2 += 0.07f;
@@ -270,9 +320,9 @@ void RenderScene()
     SuperShinyMat->Use(uniformSpecularIntensity,uniformSpecularShininess);
     uh60Model->RenderModel();
 
-     //Model uh60
+     //Model uh60 under spot
     model = glm::mat4(1.0f);
-    model = glm::translate(model,glm::vec3(4.0f,-1.7f,3.0f));
+    model = glm::translate(model,glm::vec3(3.5f,-1.7f,0.0f));
     model = glm::rotate(model,-90.0f * ToRad,glm::vec3(1.0f,0.0,0.0f));
     model = glm::scale(model,glm::vec3(0.2,0.2,0.2));
     glUniformMatrix4fv(uniformModel,1,GL_FALSE,glm::value_ptr(model));
@@ -363,6 +413,15 @@ void OmniShadowMapPass(const std::unique_ptr<SpotLight>& light)
 // Setup the viewport, clears color and depth buffer. 
 void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
+    // TODO : Create this function on windows class.
+    glViewport(0,0,1366,768);
+    // clear window (from 0 to 1 RGBA)
+    glClearColor(0.01f,0.01f,0.01f,1.0f);
+    // we are now clearing the depth buffer too.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    skyBox->Draw(viewMatrix,projectionMatrix);
+
     basicShader->UseShader();
     uniformProjection = basicShader->GetProjectionLocation();
     uniformModel = basicShader->GetModelLocation();
@@ -371,13 +430,6 @@ void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
     uniformEyePosition = basicShader->GetEyePositionLocation();
     uniformSpecularIntensity = basicShader->GetSpecularIntensityLocation();
     uniformSpecularShininess = basicShader->GetSpecularShininessLocation();
-
-    // TODO : Create this function on windows class.
-    glViewport(0,0,1366,768);
-    // clear window (from 0 to 1 RGBA)
-    glClearColor(0.01f,0.01f,0.01f,1.0f);
-    // we are now clearing the depth buffer too.
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUniformMatrix4fv(uniformProjection,1,GL_FALSE,glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(uniformView,1,GL_FALSE,glm::value_ptr(viewMatrix));
@@ -428,28 +480,28 @@ int main()
     ShinyMaterial = std::make_unique<Material>(1.0f,32);
     DullMaterial = std::make_unique<Material>(0.3f,4);
      // RGB,intensity,direction,diffuseIntensity,shadow map width, shadow map height)
-    directionalLight = std::make_unique<DirectionalLight>(glm::vec3(0.7f,0.6f,0.6f),
+    directionalLight = std::make_unique<DirectionalLight>(glm::vec3(0.98f,0.9f,0.62f),
                                              0.4f,
-                                             glm::vec3(0.0f,-15.0f,6.0f),0.3f,
+                                             glm::vec3(30.0f,-65.0f,0.0f),0.7f,
                                              1024,1024);
     directionalLight->InitShadowMap();
     // RGB,intensity,diffuseIntensity,position,constant,linear,exponent,shadowWidth,shadowHeight,nearP,farP)
-    PointLights[0] = std::make_unique<PointLight>(glm::vec3(0.0f,0.0f,1.0f),
-                                                0.6f,0.0f,
-                                                glm::vec3(-2.0f,1.0f,0.0f),
+    PointLights[0] = std::make_unique<PointLight>(glm::vec3(0.1f,0.1f,1.0f),
+                                                0.9f,0.1f,
+                                                glm::vec3(6.0f,0.0f,6.0f),
                                                 1.0, 	0.22 ,	0.20, // 20
                                                 1024,
-                                                0.01f,50.0f);
+                                                0.01f,150.0f);
     PointLights[0]->InitShadowMap();
-    pointLightCount++;
+    //pointLightCount++;
     PointLights[1] = std::make_unique<PointLight>(glm::vec3(3.0f,10.0f,0.0f),
                                                 0.6f,0.0f,
                                                 glm::vec3(-6.0f,1.0f,1.0f),
                                                 1.0,0.35, 0.44, // 13
                                                 1024,
-                                                0.01f,50.0f);
+                                                0.01f,150.0f);
     PointLights[1]->InitShadowMap();
-    pointLightCount++;
+    //pointLightCount++;
     PointLights[2] = std::make_unique<PointLight>(glm::vec3(1.0f,4.0f,0.0f),
                                                 0.5f,0.3f,
                                                 glm::vec3(-6.0f,2.0f,0.0f),
@@ -457,16 +509,16 @@ int main()
                                                 1024,
                                                 0.01f,50.0f);
     PointLights[2]->InitShadowMap();
-    pointLightCount++;
+    //pointLightCount++;
     // lantern
     SpotLights[0] = std::make_unique<SpotLight>(glm::vec3(1.0f,1.0f,1.0f), //RGB
-                                                1.0f,0.0f, //intensity, diffuseIntensity
+                                                1.0f,0.3f, //intensity, diffuseIntensity
                                                 glm::vec3(0.0f,-1.5f,0.0f), //pos
                                                 glm::vec3(-100.0f,-1.0f,0.0f), //dir
                                                 10.0f, //edge
                                                 1.0f,0.07f,0.0017f, // 65 dist //cons, lin,  exp
                                                 1024, //shadowSize
-                                                0.01f,50.0f); //nearP,farP
+                                                0.01f,150.0f); //nearP,farP
     SpotLights[0]->InitShadowMap();
     spotLightCount++;
     // heli flashlight
@@ -477,12 +529,33 @@ int main()
                                                 30.0f,
                                                 1.0f,0.022f,0.0019f, // 200 dist
                                                 1024,
-                                                0.01f,50.0f);
+                                                0.01f,150.0f);
     SpotLights[1]->InitShadowMap();
     spotLightCount++;
     ///////////////////////////////////////////////////////////////////////////////
+    
+    // SKYBOX
+    std::vector<std::string> skyBoxFaces;
+    skyBoxFaces.emplace_back("Textures/Skybox/sandstorm_rt.tga");
+    skyBoxFaces.emplace_back("Textures/Skybox/sandstorm_lf.tga");
+    
+    skyBoxFaces.emplace_back("Textures/Skybox/sandstorm_up.tga");
+    skyBoxFaces.emplace_back("Textures/Skybox/sandstorm_dn.tga");
 
-    glm::mat4 camProjection = glm::perspective(FOV,aspectRatio,0.1f,50.0f);
+    skyBoxFaces.emplace_back("Textures/Skybox/sandstorm_bk.tga");
+    skyBoxFaces.emplace_back("Textures/Skybox/sandstorm_ft.tga");
+
+    // skyBoxFaces.emplace_back("Textures/Skybox/depression-pass_rt.tga");
+    // skyBoxFaces.emplace_back("Textures/Skybox/depression-pass_lf.tga");
+    
+    // skyBoxFaces.emplace_back("Textures/Skybox/depression-pass_up.tga");
+    // skyBoxFaces.emplace_back("Textures/Skybox/depression-pass_dn.tga");
+
+    // skyBoxFaces.emplace_back("Textures/Skybox/depression-pass_bk.tga");
+    // skyBoxFaces.emplace_back("Textures/Skybox/depression-pass_ft.tga");
+    skyBox = std::make_unique<SkyBox>(skyBoxFaces);
+
+    glm::mat4 camProjection = glm::perspective(FOV,aspectRatio,0.1f,100.0f);
 
     GLfloat lastFrameTime = 0.0f;
     GLfloat deltaTime = 0.0f;
