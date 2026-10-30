@@ -19,7 +19,9 @@ class SkyBox
         glGenTextures(1,&textureID);
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-        int width,height,bitDepth;
+        int width{0};
+        int height{0};
+        int bitDepth{0};
 
         for(int i = 0; i < 6; i++)
         {

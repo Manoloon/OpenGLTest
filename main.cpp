@@ -8,12 +8,10 @@
 #include <vector>
 #include <memory>
 #include <Assimp/Importer.hpp>
-#include <GLM\gtc\matrix_transform.hpp>
-#include <GLM\gtc\type_ptr.hpp>
-#include <GLM\mat4x4.hpp>
-
+#include <GLM/gtc/matrix_transform.hpp>
+#include <GLM/gtc/type_ptr.hpp>
+#include <GLM/mat4x4.hpp>
 #include "Src/Constants.h"
-
 #include "Src/Model.hpp"
 #include "Src/Window.hpp"
 #include "Src/Mesh.hpp"
@@ -465,7 +463,7 @@ int main()
     CreateObjects();
     CreateShaders();
     GLfloat FOV = glm::radians(60.0f); // 60 to radians = 45.0 angle.
-    GLfloat aspectRatio = MainWindow.GetBufferWidth() / MainWindow.GetBufferHeight();
+    GLfloat aspectRatio = (GLfloat)MainWindow.GetBufferWidth() / (GLfloat)MainWindow.GetBufferHeight();
     camera = std::make_unique<Camera>();
 
     Text1 = std::make_unique<Texture>(Texture1Loc);
@@ -560,15 +558,29 @@ int main()
     GLfloat lastFrameTime = 0.0f;
     GLfloat deltaTime = 0.0f;
 
+    // const char* glsl_version = "#version 150";
+    // IMGUI_CHECKVERSION();
+    // ImGui::CreateContext();
+    // ImGui_ImplGlfw_InitForOpenGL(MainWindow.GetWindow(),true);
+    // ImGui_ImplOpenGL3_Init(glsl_version);
+
     while (!MainWindow.GetShouldClose())
     {
         // Calculate delta time
         GLfloat now = glfwGetTime();
-
+        
         deltaTime = lastFrameTime - now;
         lastFrameTime = now;
         // inputs events
         glfwPollEvents();
+
+        // ImGui_ImplOpenGL3_NewFrame();
+        // ImGui_ImplGlfw_NewFrame();
+        // ImGui::NewFrame();
+        // ImGui::ShowDemoWindow();
+        // ImGui::Render();
+        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         camera->MouseControl(MainWindow.GetXChange(),MainWindow.GetYChange());
         camera->KeyControl(MainWindow.GetWindow(),deltaTime);
         
@@ -589,6 +601,11 @@ int main()
         // 2 buffers at this moment.
         MainWindow.SwapBuffers();
     }
+    
+    // ImGui_ImplOpenGL3_Shutdown();
+    // ImGui_ImplGlfw_Shutdown();
+    // ImGui::DestroyContext();
+
     // and close the program
     basicShader->ClearShader();
     directionalShadowShader->ClearShader();

@@ -1,7 +1,6 @@
 #pragma once 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <Memory>
 #include <GLM/gtc/matrix_transform.hpp>
 #include "ShadowMap.hpp"
 
@@ -9,7 +8,7 @@
 class Light {
     
 protected:
-    glm::vec3 colour = {1.0f,1.0f,1.0f};
+    glm::vec3 colour{1.0f,1.0f,1.0f};
     GLfloat ambientIntensity = 1.0f;
     GLfloat diffuseIntensity = 0.0f;
     GLuint shadowWidth = 0;
@@ -19,14 +18,14 @@ protected:
     
 
 public:
-    explicit Light( glm::vec3 RGB, 
-                    GLfloat intensity, 
-                    GLfloat diffuseIntensity,
-                    GLuint shadowWidth,
-                    GLuint shadowHeight):colour(RGB),ambientIntensity(intensity),
-                        diffuseIntensity(diffuseIntensity),
-                        shadowWidth(shadowWidth),
-                        shadowHeight(shadowHeight)                        
+    explicit Light( glm::vec3 colourRGB, 
+                    GLfloat _intensity, 
+                    GLfloat _diffuseIntensity,
+                    GLuint _shadowWidth,
+                    GLuint _shadowHeight):colour(colourRGB),ambientIntensity(_intensity),
+                        diffuseIntensity(_diffuseIntensity),
+                        shadowWidth(_shadowWidth),
+                        shadowHeight(_shadowHeight)                        
                        {}
 
     virtual void InitShadowMap()=0;

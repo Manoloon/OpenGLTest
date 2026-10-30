@@ -3,7 +3,7 @@
 */
 #pragma once
 #include <array>
-
+#include <memory>
 #include "Light.hpp"
 #include "OmniShadowMap.hpp"
 
@@ -82,7 +82,7 @@ class PointLight : public Light
         return position;
     }
 
-    virtual void InitShadowMap()
+    void InitShadowMap() override
     {
         shadowMap->Init(shadowHeight);
     }
